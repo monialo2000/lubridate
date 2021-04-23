@@ -1,0 +1,183 @@
+---
+title: "R Ejercicios_Lubridate"
+output:
+  html_document:
+    df_print: paged
+editor_options:
+  chunk_output_type: inline
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(datos)
+library(lubridate)
+```
+**Tener en cuenta que lubridate no se carga con library(tidyverse)**   
+Un dato **date-time** es un punto en el tiempo, almacenado como el nro de segundos desde el 01-01-1970 00:00:00 UTC. 
+```{r as_datetime}
+dt <- as_datetime(1511870400)
+## "2017-11-28 12:00:00 UTC"
+```
+Un dato tipo **date** es una fecha almacenada como el nro. de días desde el 01-01-1970.
+```{r as_date}
+d <- as_date(17498)
+## "2017-11-28"
+```
+Un dato tipo **time** es una hora almacenada como el nro. de segundos desde 00:00:00  
+```{r as.hms}
+t <- hms::as_hms(85)
+t
+```
+
+## Transformar Date-Times
+
+Convierte cadena de caracteres o numeros a formato Date-time:  
+1. Identifica el orden del año, mes, día, hora, minuto y segundo en tus datos 
+1. Usa las siguientes funciones cuyo nombre replica el orden de tus datos
+
+```{r ymd_hms}
+ymd_hms("2017-11-28T14:02:00") #también se puede usar ymd_hm(), ymd_h()
+```
+```{r ydm_hms}
+ydm_hms("2017-22-12 10:00:00") #también se puede usar  ydm_hm(), ydm_h()
+```
+
+```{r mdy_hms}
+mdy_hms("11/28/2017 1:02:03") #también se puede usar mdy_hm(), mdy_h(). 
+```
+```{r dmy_hms}
+dmy_hms("1 Jan 2017 23:59:59") #también se puede usar dmy_hm(), dmy_h(). 
+```
+
+```{r ymd()}
+ymd(20170131) #también se puede usar ydm(). 
+```
+
+```{r mdy}
+mdy("Julio 4th, 2000") # también se puede usar myd(). 
+```
+
+```{r dmy}
+dmy("4th de Julio '99") # también se puede usar dym(). 
+```
+
+```{r yq}
+yq("2001: Q3")  #Q para el trimestre.
+```
+
+```{r hms}
+hms::hms(sec = 0, min= 1, hours = 2)
+#También lubridate::hms(), hm() y ms(), que devuelven periodos.
+```
+
+## Extrae o define algún componente de fecha
+* Usa una función para conseguir un componente.   
+* Asigna a una función para cambiar un componente.   
+
+```{r day}
+d
+day(d) 
+day(d) <- 1
+d
+```
+
+```{r date}
+date(dt) # Componente fecha. 
+```
+```{r year}
+year(dt)   #Año. 
+```
+
+```{r isoyear_epiyear}
+isoyear(dt) #El año ISO 8601
+epiyear(dt) #Año epidemiológico
+```
+
+```{r month}
+month(dt) #month(x, label = FALSE, abbr = TRUE, locale = Sys.getlocale("LC_TIME"))
+```
+
+
+```{r wday}
+wday(dt) # dìa de la semana
+#wday(x, label = FALSE, abbr = TRUE, week_start = getOption("lubridate.week.start", 7),  locale = Sys.getlocale("LC_TIME"))
+```
+```{r otras_partes_fechas}
+qday(dt) #Día del trimestre.
+hour(dt) #Hora. 
+minute(dt) #Minutos. 
+second(dt) #Segundos.
+week(dt) #Semana del año. 
+isoweek(dt) #Semana ISO 8601.
+epiweek(dt) #Semana epidemiológica.                                
+quarter(dt) #Trimestre. 
+semester(dt) #Semestre. 
+am(dt) #¿Es am? am(dt) 
+pm(dt) #¿Es pm? pm(dt)
+dst(dt) #¿Es horario de verano? dst(d)
+leap_year(dt) #¿Es año bisiesto?
+```
+
+
+```{r update_date}
+update(dt, mday = 2, hour = 1) 
+```
+ 
+## Redondea Date-time 
+
+```{r floor_date}
+floor_date(dt, unit = "month") #floor_date(x, unit = "second") Redondea hacia abajo.  
+```
+```{r round_date}
+round_date(dt, unit = "month") #round_date(x, unit = "second") Redondear a la unidad más cercana.           
+
+```
+```{r ceiling_date}
+ceiling_date(dt, unit = "month") #ceiling_date(x, unit = "second", change_on_boundary = NULL) Redondea  hacia arriba. 
+
+```
+
+```{r rollback}
+rollback(dt)  #rollback(dates, roll_to_first = FALSE, preserve_hms = TRUE) Devuelve el último día del mes previo. 
+
+```
+## Diseñar Formatos amigables Date-time
+1. Genera una plantilla, crea una función  
+1. Aplica la plantilla a fechas  
+
+
+```{r stamp}
+sf <- stamp("Creado el dia: 17-03 del año  2021  a las 3:34")
+sf(ymd("2020-05-26"))
+wday(ymd(20200526))
+```
+
+## Zonas Horarias
+
+R reconoce aprox. 600 zonas horarias. Cada una  incluye la zona horaria, horario de verano y variaciones históricas del calendario para un área. R asigna una zona horaria por vector.
+**Usa la zona horaria UTC** para evitar el Horario de Verano
+
+```{r OlsonNames}
+OlsonNames() # devuelve la lista de nombres válidos de zonas horarias
+```
+
+Para obtener fecha-hora en otra zona horaria
+```{r with_tz}
+with_tz(dt, "US/Pacific")
+```
+
+```{r}
+force_tz(dt, "US/Pacific")
+
+```
+
+
+## Otras funciones: 
+
+date_decimal(decimal, tz = "UTC") date_decimal(2017.5)
+now(tzone = “") Hora actual en tz (time zone, zona horaria) (por defecto al valor del sistema tz). now()
+today(tzone = "") Fecha actual en un tz (por defecto al valor del sistema tz). today()
+fast_strptime() strptime  versión rápida. fast_strptime('9/1/01', '%y/%m/%d')
+parse_date_time() funciones de análisis de fecha y hora fáciles de usar. parse_date_time("9/1/01", "ymd")
+
+Todo lo que era Perìodo, Intervalo no lo entendì...
