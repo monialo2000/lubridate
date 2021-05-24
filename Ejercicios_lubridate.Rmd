@@ -66,7 +66,7 @@ yq("2001: Q3")  #Q para el trimestre.
 ```
 
 ```{r hms}
-hms::hms(sec = 0, min= 1, hours = 2)
+hms::hms(sec = 0, min = 1, hours = 2)
 #También lubridate::hms(), hm() y ms(), que devuelven periodos.
 ```
 
@@ -122,6 +122,17 @@ leap_year(dt) #¿Es año bisiesto?
 ```{r update_date}
 update(dt, mday = 2, hour = 1) 
 ```
+
+## Funciones muy ùtiles en programación
+```{r now}
+now() #now(tzone = “") Hora actual en tz  devuelve fecha-hora con indicaciòn del tiempo +/- a UTC
+```
+
+
+```{r today}
+today()   # today(tzone = "") Fecha actual en un tz  
+```
+
  
 ## Redondea Date-time 
 
@@ -137,10 +148,106 @@ ceiling_date(dt, unit = "month") #ceiling_date(x, unit = "second", change_on_bou
 
 ```
 
+```{r day_mday_yday_wday_qday}
+x <-  dmy(26052021)
+day(x)
+mday(x) #month day
+yday(x)
+qday(x) #quarter day
+wday(x)
+wday(
+  x,
+  label = FALSE,
+  abbr = TRUE,
+  week_start = getOption("lubridate.week.start", 1),
+  locale = Sys.getlocale("LC_TIME") #por default week-start = 7
+)
+#Para llevar la fecha al primer día de la semana (con semana empezando domingo)
+wday(x, week_start = getOption("lubridate.week.start", 7)) <- 1
+
+qday(x) <- 92
+x
+```
+
+
 ```{r rollback}
 rollback(dt)  #rollback(dates, roll_to_first = FALSE, preserve_hms = TRUE) Devuelve el último día del mes previo. 
 
 ```
+## Lapsos de tiempo  
+* durations (duraciones): representa un número exacto de segundos
+* periods (periodos): representa unidades "humanas" como semanas o meses
+* intervals (intervalos): representa un punto de inicio y un punto de finalizacion
+
+1. Cuando restas dos fechas obtienes un objeto difftime (pero no maneja meses o años). difftime registra un lapso de tiempo de segundos, minutos, horas, días o semanas. A veces es dificil de trabajar...
+
+1. durations en Lubridate lo maneja en segundos. Ojo!!! se pueden encontrar valores inesperados cuando se trabaja con durations.... por ej. si en una zona hay cambio de horario en periodo de verano... el día del cambio, ese día va a tener 23 horas en vez de 24!
+
+1. periodos maneja las fechas con parámetros "humanos". O sea, que no tienen largo fijo en segundos, se debe especificar "units" para saber en que unidad se cuenta y se puede hacer  con "dias" o "meses". Es más intuitivo.Los períodos son más propensos a hacer lo que esperas que hagan
+
+```{r as.durations_dseconds_dminutes_dhours_ddays_dweeks_dmonths_dyears}
+
+difftime(today(), ymd(19610526), units = "secs") 
+ # opciones validas para units: "auto", "secs", "mins", "hours", "days", "weeks"
+
+dif_claudio_monica = difftime(ymd(20211013), ymd(20210526), units = "weeks")
+
+edad_m = today() - ymd(19610526) #difftime
+edad_monica <- as.duration(edad_m)
+edad_monica
+minuto <- dseconds(60)
+año <- dyears(1)
+dif_con_claudio <- dweeks(20)
+```
+
+```{r as.periods_days_seconds_minutes_hours_months_weeks_years}
+# as.period(x, unit, ...)
+# x = an interval, difftime, or numeric object
+# unit = A character string that specifies which time units to build period in. unit is only implemented for the as.period.numeric method and the as.period.interval method. For as.period.interval, as.period will convert intervals to units no larger than the specified unit.
+una_pm <- as_datetime("2016-01-01 13:00:00 EST")
+periodo_1 <- as.period(edad_m)
+periodo_1 + days(3)
+
+leap <- interval(ymd("20160101"), ymd("20170101"))
+leap_in_days <- as.period(leap, unit = "days")
+leap_in_years <- as.period(leap, unit = "years")
+ymd("20151231") + leap_in_days
+ymd("20151231") + leap_in_years
+
+dst <- interval(ymd("2016-11-06", tz = "America/Chicago"),
+ymd("2016-11-07", tz = "America/Chicago"))
+as.period(dst, unit = "hours")
+
+per <- period(hours = 10, minutes = 6)
+as.numeric(per, "hours")
+as.numeric(per, "minutes")
+
+enero31 <- ymd_hms("20130131 03:04:05")
+enero31 + months(1:3) # Feb 31 and April 31 returned as NA
+add_with_rollback(enero31, months(1), preserve_hms = TRUE)
+add_with_rollback(enero31, months(1), roll_to_first = TRUE)
+add_with_rollback(enero31, months(1), roll_to_first = TRUE, preserve_hms = FALSE)
+
+# Date %m+% months(n) always returns a date in the nth month after Date.
+leap <- ymd("20120229")
+leap %m+% years(1)
+leap %m+% years(-1)
+leap %m-% years(1)
+
+```
+
+## Interval
+Un intervalo es una duración con un punto de partida: eso lo hace preciso, por lo que puedes determinar exactamente cuán largo es:
+
+```{r interval}
+dyears(1) /ddays(366)  # calculando con duración
+years(1)/days(1)       # calculando con periodos
+
+siguiente_anio <- today() + years(1)
+(today() %--% siguiente_anio) / ddays(1)  
+```
+
+
 ## Diseñar Formatos amigables Date-time
 1. Genera una plantilla, crea una función  
 1. Aplica la plantilla a fechas  
@@ -175,9 +282,7 @@ force_tz(dt, "US/Pacific")
 ## Otras funciones: 
 
 date_decimal(decimal, tz = "UTC") date_decimal(2017.5)
-now(tzone = “") Hora actual en tz (time zone, zona horaria) (por defecto al valor del sistema tz). now()
-today(tzone = "") Fecha actual en un tz (por defecto al valor del sistema tz). today()
 fast_strptime() strptime  versión rápida. fast_strptime('9/1/01', '%y/%m/%d')
 parse_date_time() funciones de análisis de fecha y hora fáciles de usar. parse_date_time("9/1/01", "ymd")
 
-Todo lo que era Perìodo, Intervalo no lo entendì...
+
