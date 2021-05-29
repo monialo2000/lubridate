@@ -237,16 +237,28 @@ leap %m-% years(1)
 ```
 
 ## Interval
-Un intervalo es una duración con un punto de partida: eso lo hace preciso, por lo que puedes determinar exactamente cuán largo es:
+Un intervalo es una **duración con un punto de partida**: eso lo hace preciso, por lo que puedes determinar exactamente cuán largo es:
 
 ```{r interval}
-dyears(1) /ddays(366)  # calculando con duración
-years(1)/days(1)       # calculando con periodos
+dyears(1) /ddays(366)  # calculando con duración no es preciso
+years(1)/days(1)       # calculando con periodos no es preciso
 
+#Intervalo
 siguiente_anio <- today() + years(1)
 (today() %--% siguiente_anio) / ddays(1)  
-```
 
+# Para encontrar cuántos períodos caen dentro de un intervalo, tienes que usar la división entera:
+
+(today() %--% siguiente_anio) %/% days(1)
+```
+# buscar en help %--% y ver todo lo concerniente a intervalos
+
+## Resumen:
+Cómo elegir que usar: interval, duration o period  
+* Si solo te interesa el tiempo físico, usa una duración  
+* si necesitas agregar tiempos humanos, usa un período  
+* si tienes que deducir cuán largo es un lapso de tiempo en unidades humanas, usa un intervalo.  
+![](duration-period-interval.JPG)
 
 ## Diseñar Formatos amigables Date-time
 1. Genera una plantilla, crea una función  
@@ -264,15 +276,51 @@ wday(ymd(20200526))
 R reconoce aprox. 600 zonas horarias. Cada una  incluye la zona horaria, horario de verano y variaciones históricas del calendario para un área. R asigna una zona horaria por vector.
 **Usa la zona horaria UTC** para evitar el Horario de Verano
 
+El primer desafío es que los nombres comunes de los husos horarios tienden a ser ambiguos. Por ejemplo, si eres estadounidense, probablemente te sea familiar la sigla EST, (del inglés de Tiempo Este Estándar). Pero también existe en Canadá y Australia. Se usa entonces <continente>/<ciudad> Ejemplo: America/New_York
+
+Como saber el uso horario de tu sistema:
+```{r sys.timezone}
+Sys.timezone()
+```
+
+En R, el huso horario es un atributo de la fecha-hora (date-time)
+
+```{r huso_horario atributo fecha}
+x1 <- ymd_hms("2015-06-01 12:00:00", tz = "America/New_York")
+x2 <- ymd_hms("2015-06-01 18:00:00", tz = "Europe/Copenhagen")
+x3 <- ymd_hms("2015-06-02 04:00:00", tz = "Pacific/Auckland")
+
+x1 - x2
+x1 - x3
+
+```
+* Excepto que se especifique otra cosa, lubridate siempre usa UTC. UTC (Tiempo Universal Coordinado) es el huso horario estándar empleado por la comunidad científica y es aproximadamente equivalente a su predecesor GMT (siglas en inglés de Tiempo del Meridiano de Greenwich). 
+* UTC no tiene horario de verano, por lo que resulta una representación conveniente para la computación. 
+* Las operaciones que combinan fechas y horas, como c(), a menudo descartan el huso horario
+
+```{r}
+x4 <- c(x1, x2, x3)
+x4
+```
+
+
 ```{r OlsonNames}
 OlsonNames() # devuelve la lista de nombres válidos de zonas horarias
 ```
 
-Para obtener fecha-hora en otra zona horaria
+Para obtener fecha-hora en otra zona horaria, mantiene el momento cambia el visualizacion
 ```{r with_tz}
-with_tz(dt, "US/Pacific")
+dta <- with_tz(dt, "US/Pacific")
+dta
+
+x4a <- with_tz(x4, tzone = "Australia/Lord_Howe")
+x4a
+
+dta - dt
+x4 - x4a
 ```
 
+Para se ha etiquetado mal la zona horaria, y se necesita arreglar.
 ```{r}
 force_tz(dt, "US/Pacific")
 
