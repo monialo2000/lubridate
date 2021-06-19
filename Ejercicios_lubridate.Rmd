@@ -28,6 +28,9 @@ Un dato tipo **time** es una hora almacenada como el nro. de segundos desde 00:0
 t <- hms::as_hms(85)
 t
 ```
+**Es importante la clase de date_time** (son las implementaciones internas de date-time):   
+La clase **POSIXct** almacena internamente esta cifra como un número entero, mientras que la clase **POSIXlt** la descompone en una lista con elementos para los segundos, minutos, horas, día, mes y año.
+
 
 ## Transformar Date-Times
 

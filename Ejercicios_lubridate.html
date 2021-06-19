@@ -1634,6 +1634,8 @@ Un dato <strong>date-time</strong> es un punto en el tiempo, almacenado como el 
 <pre class="r"><code>t &lt;- hms::as_hms(85)
 t</code></pre>
 <pre><code>## 00:01:25</code></pre>
+<p><strong>Es importante la clase de date_time</strong> (son las implementaciones internas de date-time):<br />
+La clase <strong>POSIXct</strong> almacena internamente esta cifra como un número entero, mientras que la clase <strong>POSIXlt</strong> la descompone en una lista con elementos para los segundos, minutos, horas, día, mes y año.</p>
 <div id="transformar-date-times" class="section level2">
 <h2>Transformar Date-Times</h2>
 <p>Convierte cadena de caracteres o numeros a formato Date-time:<br />
@@ -1717,9 +1719,9 @@ d</code></pre>
 <div id="funciones-muy-ùtiles-en-programación" class="section level2">
 <h2>Funciones muy ùtiles en programación</h2>
 <pre class="r"><code>now() #now(tzone = “&quot;) Hora actual en tz  devuelve fecha-hora con indicaciòn del tiempo +/- a UTC</code></pre>
-<pre><code>## [1] &quot;2021-05-28 20:58:39 -03&quot;</code></pre>
+<pre><code>## [1] &quot;2021-06-19 09:40:11 -03&quot;</code></pre>
 <pre class="r"><code>today()   # today(tzone = &quot;&quot;) Fecha actual en un tz  </code></pre>
-<pre><code>## [1] &quot;2021-05-28&quot;</code></pre>
+<pre><code>## [1] &quot;2021-06-19&quot;</code></pre>
 </div>
 <div id="redondea-date-time" class="section level2">
 <h2>Redondea Date-time</h2>
@@ -1770,7 +1772,7 @@ x</code></pre>
 <li><p>periodos maneja las fechas con parámetros “humanos”. O sea, que no tienen largo fijo en segundos, se debe especificar “units” para saber en que unidad se cuenta y se puede hacer con “dias” o “meses”. Es más intuitivo.Los períodos son más propensos a hacer lo que esperas que hagan</p></li>
 </ol>
 <pre class="r"><code>difftime(today(), ymd(19610526), units = &quot;secs&quot;) </code></pre>
-<pre><code>## Time difference of 1893628800 secs</code></pre>
+<pre><code>## Time difference of 1895529600 secs</code></pre>
 <pre class="r"><code> # opciones validas para units: &quot;auto&quot;, &quot;secs&quot;, &quot;mins&quot;, &quot;hours&quot;, &quot;days&quot;, &quot;weeks&quot;
 
 dif_claudio_monica = difftime(ymd(20211013), ymd(20210526), units = &quot;weeks&quot;)
@@ -1778,7 +1780,7 @@ dif_claudio_monica = difftime(ymd(20211013), ymd(20210526), units = &quot;weeks&
 edad_m = today() - ymd(19610526) #difftime
 edad_monica &lt;- as.duration(edad_m)
 edad_monica</code></pre>
-<pre><code>## [1] &quot;1893628800s (~60.01 years)&quot;</code></pre>
+<pre><code>## [1] &quot;1895529600s (~60.07 years)&quot;</code></pre>
 <pre class="r"><code>minuto &lt;- dseconds(60)
 año &lt;- dyears(1)
 dif_con_claudio &lt;- dweeks(20)</code></pre>
@@ -1788,7 +1790,7 @@ dif_con_claudio &lt;- dweeks(20)</code></pre>
 una_pm &lt;- as_datetime(&quot;2016-01-01 13:00:00 EST&quot;)
 periodo_1 &lt;- as.period(edad_m)
 periodo_1 + days(3)</code></pre>
-<pre><code>## [1] &quot;21920d 0H 0M 0S&quot;</code></pre>
+<pre><code>## [1] &quot;21942d 0H 0M 0S&quot;</code></pre>
 <pre class="r"><code>leap &lt;- interval(ymd(&quot;20160101&quot;), ymd(&quot;20170101&quot;))
 leap_in_days &lt;- as.period(leap, unit = &quot;days&quot;)
 leap_in_years &lt;- as.period(leap, unit = &quot;years&quot;)
