@@ -1,0 +1,161 @@
+---
+title: "R Lubridate v40i03"
+output:
+  html_document:
+    df_print: paged
+  word_document: default
+editor_options:
+  chunk_output_type: inline
+---
+
+
+```{r setup, include=FALSE}
+library("lubridate")
+library(tidyverse)
+```
+
+## Section 2. Motivation
+### base R methods:
+```{r}
+date <- as.POSIXct("01-01-2010", format = "%d-%m-%Y", tz = "UTC")
+as.numeric(format(date, "%m"))
+as.POSIXlt(date)$month + 1 
+date <- as.POSIXct(format(date, "%Y-2-%d"), tz = "UTC")
+date <- seq(date, length = 2, by = "-1 day")[2] 
+as.POSIXct(format(as.POSIXct(date), tz = "UTC"), tz = "GMT") 
+```
+
+## Lubridate comparison:
+```{r dmy month days with_tz}
+date <- dmy("01-01-2010") 
+month(date)
+month(date) <- 2 
+date <- date - days(1)
+with_tz(date, "GMT") 
+```
+
+## Section 3. Parsing date-times
+```{r formatos mdy ymd dmy hms}
+mdy("12-01-2010")  #"2010-12-01 UTC" 
+dmy("12-01-2010")  #"2010-01-12 UTC"
+dmy(c("31.12.2010", "01.01.2011"))  #"2010-12-31 UTC" "2011-01-01 UTC" 
+```
+
+## Section 4. Manipulating date-times
+```{r}
+date <- now()
+year(date)
+month(date) 
+month(date, label = TRUE) 
+month(date, label = TRUE, abbr = FALSE) 
+wday(date, label = TRUE, abbr = FALSE) 
+day(date) <- 5 
+dates <- ymd_hms("2010-01-01 01:00:00", "2010-01-01 01:30:00")
+minute(dates) <- mean(minute(dates)) 
+day(date) <- 30
+day(date) <- 1 
+month(date) <- month(date) + 1
+day(date) <- day(date) - 1 
+update(date, year = 2010, month = 1, day = 1) 
+hour(date) <- 12 
+date <- date + hours(3)
+```
+## Section 5. Arithmetic with date-times
+
+### Section 5.1. Instants
+```{r instant}
+start_2012 <- ymd_hms("2012-01-01 12:00:00") 
+is.instant(364)  #FALSE
+is.instant(start_2012)  #TRUE
+```
+
+### Section 5.2. Intervals
+interval() crea un objeto tipo Interval con fecha de inicio y cantidad de tiempo o fecha fin. Si la fecha de comienzo empieza antes que la fecha de fin: el intervalo será positivo. Sino, será negativo. Desde la versión 1.7.2 se suportan Vectores de tipo char en formato ISO8601.
+Hay varias formas de definir un intervalo:
+interval(start = NULL, end = NULL, tzone = tz("UTC""))
+start %--% end
+
+int_start() ó int_end() son funciones para acceder
+int_start<-() ó int_end<-() son funciones para setear
+
+int_flip() da vuelta el orden de fecha comienzo y fin de un intervalo 
+
+int_shift() corre el inicio y final de un intervalo para arriba o para abajo de la linea de tiempo por ua cantidad es especificada. Esto puede variar la longitud exacta del intervalo  si es corrido por un objeto tipo período. Pero si se realiza por un objeto tipo Duration o difftime va a mantenerse del largo exacto en segundos.
+
+int_standardize() se asegura que todos los intervalos en un objeto intervalo sean positivos. Si un intervalo es negativo hace flip para que se convierta en positivo.
+
+int_aligns() testea si 2 intervalos comparten punto inicio o fin. No importa la dirección de cada intervalo, int_align testea si el momento más temprano o el más tarde de cada intervalo ocurren al mismo tiempo
+
+int_diff() returns the intervals that occur between the elements of a vector of date-times. int_diff() is similar to the POSIXt and Date methods of diff(), but returns an Interval object instead of a difftime object.
+
+OJO!!! VER QUE QUEDO MAL LA DEFINICION DE SPAN Y NO DEJA EJECUTAR BIEN ESTE CHUNK
+```{r interval}
+ intervalo_1 <- interval(ymd(20090201), ymd(20090101)) # forma 1
+
+date1 <- ymd_hms("2009-03-08 01:59:59")
+date2 <- ymd_hms("2000-02-29 12:00:00")
+interval_2 <- interval(date2, date1) # forma positiva
+interval_3 <- interval(date1, date2)
+
+span <- interval(ymd(20090101), ymd(20090201))
+span_difftime <- as.difftime(ymd(20090101) - ymd(20090201))
+
+
+### ISO Intervals
+#fecha inicio. fecha fin
+inter_4 <- interval("2007-03-01T13:00:00Z/2008-05-11T15:30:00Z")
+
+#fecha inicio y periodo
+inter_5 <- interval("2007-03-01T13:00:00Z/P1Y2M10DT2H30M")
+
+#periodo y fecha fin 
+inter_6 <- interval("P1Y2M10DT2H30M/2008-05-11T15:30:00Z")
+
+# fecha inicio y período sin fecha
+inter_7 <- interval("2008-05-11/PT2H30M")  #ojo en v40i03 esta sin la T y hace cualquier cosa o algo raro...
+
+int_start(inter_7) <- "2008-07-11"
+
+int_flip(inter_7)
+# int_shift(inter_7, by = span) esta no unciona porque no se puede hacer shift con by de otro intervalo tiene que ser de tipo duration o period
+
+span_duration <- as.duration(ymd(20090101) - ymd(20090201))
+int_shift(inter_7, by = span_duration)
+
+interval("2008 05 11/P2hours 30minutes")
+interval("08 05 11/P 2h 30m")
+
+start_2011 <- ymd_hms("2011-01-01 12:00:00") 
+start_2010 <- ymd_hms("2010-01-01 12:00:00") 
+#span <- start_2011 - start_2010  #2010-01-01 12:00:00 - 2011-01-01 12:00:00 
+#int_start(span)  #"2010-01-01 12:00:00 UTC" 
+#int_end(span)  #"2011-01-01 12:00:00 UTC" 
+#start_2010 + span  #"2011-01-01 12:00:00 UTC"
+#start_2011 + span  #"2012-01-01 12:00:00 UTC" 
+as.interval(difftime(start_2011, start_2010), ymd("2010-03-05"))  #2010-03-05 - 2011-03-05 
+
+vector_interval <- c(inter_4, inter_5, inter_6, inter_7)
+
+#Para ver como funciona int_standardize
+vector_interval
+int_standardize(vector_interval)
+
+#Para probar alinear en el caso de inter_4 inter_7 tenía horas de diferencia, entonces con shift cambie esa cantidad de horas para que quedaran alineados
+
+int_aligns(inter_4, inter_5)
+int_aligns(inter_4, inter_7)
+inter_7 <- int_shift(inter_7, by = duration("13hours"))
+int_aligns(inter_4, inter_7)
+valor1 <- int_start(inter_4)
+valor2 <- int_end(inter_4)
+valor3 <- int_start(inter_7)
+is.instant(valor1)
+
+vector_val <- c(valor1, valor2, valor3)
+
+int_diff(vector_val)
+#int_diff(vector_interval) no funciona!!!! tiene que ser fecha no intervalo
+
+```
+
+

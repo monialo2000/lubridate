@@ -80,8 +80,8 @@ en_salida_programada %>%
 ```
 ```{r redondeo_prueba}
 
-vuelos_dt %>%  filter(horario_salida > ymd(20130115)) %>% 
-    transmute(horario_salida, piso = floor_date(horario_salida, "week"), dif = ((horario_salida - floor_date(horario_salida, "week"))) , techo = ceiling_date(horario_salida, "week"), redon = round_date(horario_salida, "week")) 
+vuelos_redondeo <- vuelos_dt %>%  filter(horario_salida > ymd(20130115)) %>% 
+    transmute(horario_salida, piso = floor_date(horario_salida, "week"), dif = ((horario_salida - piso)) , techo = ceiling_date(horario_salida, "week"), redon = round_date(horario_salida, "week")) 
 ```
 ```{r redondeo_vuelos}
 vuelos_dt %>%

@@ -1,0 +1,134 @@
+---
+title: "Lubridate_vignette"
+output: html_notebook
+editor_options: 
+  chunk_output_type: inline
+---
+```{r setup, include=FALSE}
+library(tidyverse)
+library(lubridate)
+```
+
+##Parseando fechas y horas
+Lubridate tiene una gran variedad de funciones para distintos formatos de fecha y fecha-hora y las almacena como objetos POSIXct
+También puede parsear parte de fecha de strings ,en objectos Period, con funciones hm(), hms(), ms()
+
+```{r parse date time}
+ymd("20110604") #dmy(), myd(), ymd(), ydm(), dym(), mdy(), ymd_hms(), hm(), hms(), ms()
+mdy("06-04-2011")
+dmy("04/06/2011")
+# con información de hora
+arrive <- ymd_hms("2011-06-04 12:00:00", tz = "Pacific/Auckland")
+leave <- ymd_hms("2011-08-10 14:00:00", tz = "Pacific/Auckland")
+```
+```{r paser}
+x <- parse_date_time(c("2010-01-01", "2010-01-02", "2010-01-06"), "ymd")
+x <- parse_date_time(c("20100101", "20100102", "20100106"), "Ymd")
+x <- parse_date_time(c(100101, 100102, 100106), "ymd")
+
+```
+
+
+## Setear y extraer info 
+```{r set extract }
+second(arrive)        #extract
+second(arrive) <-  25 #set
+wday(arrive)
+wday(arrive, label = TRUE) #", abbr = FALSE" para tener el nombre completo
+```
+
+## Time Zones
+Hay dos funciones importantes con timezones:
+with_tz : mostrar un mismo momento en un diferente time zone
+force_tz: crear un nuevo momento combinando un horario con otro time zone
+```{r with_tz force_tz}
+meeting <- ymd_hms("2011-07-01 09:00:00", tz = "Pacific/Auckland")
+with_tz(meeting, "America/Chicago")
+
+mistake <- force_tz(meeting, "America/Chicago")
+with_tz(mistake, "Pacific/Auckland")
+```
+
+## Instantes:
+Son momentos especificos de tiempo. Pueden ser del tipo: Date, POSIXct y POSIXlt. Se puede usar is.instant(). Lubridate distingue entre instant y time-spans: period, duration & interval.
+Instants son conceptualmente una combinación de medidas de diferente unidad. Las funciones "accessor" que se pueden usar para extraer parte de la fecha-hora son:
+second(), minute(), hour(), day(), yday(), mday(), wday(), week(), month(), year(), tz(), and dst() (day-savings-time indicator de date-time funcion que devuelve TRUE o FALSE) 
+
+```{r is.instant now today}
+is.instant("2010-10-10")      #FALSE
+is.instant(ymd("2010-10-10")) #TRUE
+now()   #returns the current system time as a POSIXct
+today() #returns the current system date
+origin             # objeto que contiene la fecha 1970-01-01 UTC en formato POSIXct. Es la fecha-hora origen del sistema de numeracion usados por POSIXct y POSIXlt
+unclass(now())    #1624480996 attr(,"tzone") [1] "" expresado en segundos
+unclass(today())  #18801 expresado en dias
+```
+
+## Redondeo de fechas:
+ se pueden redondear a una unidad conveniente usando las siguientes funciones
+```{r round_date floor_date ceiling_date}
+ceiling_date(ymd("2001-01-01"), unit = "3 months") 
+ceiling_date(ymd("2001-01-01"), unit = "31 days")
+ceiling_date(ymd("2001-01-31"), unit = "days")
+ceiling_date(ymd("20200202"), "month") - 1 # para obtener ultimo dia del mes
+x <- ymd_hms("2009-08-03 12:01:59.23")
+round_date(x, ".5s")
+round_date(x, "sec")
+round_date(x, "second")
+round_date(x, "minute")
+round_date(x, "5 mins")
+round_date(x, "hour")
+round_date(x, "2 hours")
+round_date(x, "day")
+round_date(x, "week")
+round_date(x, "month")
+round_date(x, "bimonth")
+round_date(x, "quarter") == round_date(x, "3 months")
+round_date(x, "halfyear")
+round_date(x, "year")
+```
+ 
+## Intervalos:
+Interval es un difftime (un lapso) con una fecha exacta de inicio.(a diferencia de duration). Lo cual nos permite operar con fechas exactas, sin molestar los bisiestos.
+
+Se puede guardar un intervalo de tiempo como un objeto de clase Interval. Va a tener un inicio, cantidad de segundos hasta el final del intervalo y un time-zone. El intervalo puede ser positivo (start<end) o negativo (si end<start)
+Por ejemplo, si estuve en Auckland del 4-6-11 al 10-8-11, se puede crear un intervalo de 2 formas posibles:
+
+```{r Interval}
+auckland <- interval(arrive, leave)
+auckland_2 <-  arrive %--% leave
+attributes(auckland)
+```
+
+El encuentro de Estadística (JSM) tuvo lugar desde 20-07 al 31-08
+```{r JSM}
+JSM <- interval(ymd("2011-07-20", tz= "Pacific/Auckland"), ymd("2011-08-31", tz ="Pacific/Auckland")) #time zone acá: "America/Argentina/Buenos_Aires"
+```
+
+Mi visita se superpone con el meeting?
+```{r overlap}
+int_overlaps(JSM, auckland)
+```
+
+```{r setdiff}
+setdiff(auckland, JSM)
+setdiff(JSM, auckland)
+```
+Otras funciones que se pueden utilizar con intervals son:  int_start, int_end, int_flip, int_shift, int_aligns, union, intersect and %within%.
+
+```{r interval}
+int_start(JSM)
+int_end(auckland)
+
+
+start_2011 <- ymd_hms("2011-01-01 12:00:00") 
+start_2010 <- ymd_hms("2010-01-01 12:00:00") 
+span <- start_2011 - start_2010  #2010-01-01 12:00:00 - 2011-01-01 12:00:00  es un difftime
+int_start(as.interval(span, start_2010))  #"2010-01-01 12:00:00 UTC" 
+int_end(as.interval(span, start_2010))  #"2011-01-01 12:00:00 UTC" 
+start_2010 + span  #"2011-01-01 12:00:00 UTC"
+start_2011 + span  #"2012-01-01 12:00:00 UTC" 
+ymd("2012-01-01") + span  #2012-12-31 porque el 2012 es bisiesto
+as.interval(difftime(start_2011, start_2010), ymd("2010-03-05"))  #2010-03-05 - 2011-03-05
+```
+
