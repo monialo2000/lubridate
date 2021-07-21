@@ -1719,18 +1719,81 @@ d</code></pre>
 <div id="funciones-muy-ùtiles-en-programación" class="section level2">
 <h2>Funciones muy ùtiles en programación</h2>
 <pre class="r"><code>now() #now(tzone = “&quot;) Hora actual en tz  devuelve fecha-hora con indicaciòn del tiempo +/- a UTC</code></pre>
-<pre><code>## [1] &quot;2021-06-19 09:40:11 -03&quot;</code></pre>
+<pre><code>## [1] &quot;2021-07-21 17:43:00 -03&quot;</code></pre>
 <pre class="r"><code>today()   # today(tzone = &quot;&quot;) Fecha actual en un tz  </code></pre>
-<pre><code>## [1] &quot;2021-06-19&quot;</code></pre>
+<pre><code>## [1] &quot;2021-07-21&quot;</code></pre>
 </div>
 <div id="redondea-date-time" class="section level2">
 <h2>Redondea Date-time</h2>
-<pre class="r"><code>floor_date(dt, unit = &quot;month&quot;) #floor_date(x, unit = &quot;second&quot;) Redondea hacia abajo.  </code></pre>
+<p>floor redondea hacia abajo segun la unidad seleccionada: si selecciona month va a dejar el más bajo valor de día</p>
+<pre class="r"><code>floor_date(dt, unit = &quot;month&quot;) #floor_date(x, unit = &quot;second&quot;) Redondea hacia abajo. </code></pre>
 <pre><code>## [1] &quot;2017-11-01 UTC&quot;</code></pre>
+<pre class="r"><code>floor_date(
+  dt,
+  unit = &quot;minutes&quot;,
+  week_start = getOption(&quot;lubridate.week.start&quot;, 7)
+)</code></pre>
+<pre><code>## [1] &quot;2017-11-28 12:00:00 UTC&quot;</code></pre>
+<pre class="r"><code>floor_date(
+  dt,
+  unit = &quot;days&quot;,
+  week_start = getOption(&quot;lubridate.week.start&quot;, 7)
+)</code></pre>
+<pre><code>## [1] &quot;2017-11-28 UTC&quot;</code></pre>
+<pre class="r"><code>floor_date(
+  dt,
+  unit = &quot;weeks&quot;,
+  week_start = getOption(&quot;lubridate.week.start&quot;, 7)
+)</code></pre>
+<pre><code>## [1] &quot;2017-11-26 UTC&quot;</code></pre>
 <pre class="r"><code>round_date(dt, unit = &quot;month&quot;) #round_date(x, unit = &quot;second&quot;) Redondear a la unidad más cercana.           </code></pre>
 <pre><code>## [1] &quot;2017-12-01 UTC&quot;</code></pre>
+<pre class="r"><code>round_date(
+  dt,
+  unit = &quot;minutes&quot;,
+  week_start = getOption(&quot;lubridate.week.start&quot;, 7)
+)</code></pre>
+<pre><code>## [1] &quot;2017-11-28 12:00:00 UTC&quot;</code></pre>
+<pre class="r"><code>round_date(
+  dt,
+  unit = &quot;days&quot;,
+  week_start = getOption(&quot;lubridate.week.start&quot;, 7)
+)</code></pre>
+<pre><code>## [1] &quot;2017-11-29 UTC&quot;</code></pre>
+<pre class="r"><code>round_date(
+  dt,
+  unit = &quot;weeks&quot;,
+  week_start = getOption(&quot;lubridate.week.start&quot;, 7)
+)</code></pre>
+<pre><code>## [1] &quot;2017-11-26 UTC&quot;</code></pre>
+<pre class="r"><code>ceiling_date(dt, unit = &quot;year&quot;) #ceiling_date(x, unit = &quot;second&quot;, change_on_boundary = NULL) Redondea  hacia arriba. </code></pre>
+<pre><code>## [1] &quot;2018-01-01 UTC&quot;</code></pre>
+<pre class="r"><code>ceiling_date(
+  dt,
+  unit = &quot;minutes&quot;,
+  week_start = getOption(&quot;lubridate.week.start&quot;, 7)
+)</code></pre>
+<pre><code>## [1] &quot;2017-11-28 12:00:00 UTC&quot;</code></pre>
 <pre class="r"><code>ceiling_date(dt, unit = &quot;month&quot;) #ceiling_date(x, unit = &quot;second&quot;, change_on_boundary = NULL) Redondea  hacia arriba. </code></pre>
 <pre><code>## [1] &quot;2017-12-01 UTC&quot;</code></pre>
+<pre class="r"><code>ceiling_date(
+  dt,
+  unit = &quot;minutes&quot;,
+  week_start = getOption(&quot;lubridate.week.start&quot;, 7)
+)</code></pre>
+<pre><code>## [1] &quot;2017-11-28 12:00:00 UTC&quot;</code></pre>
+<pre class="r"><code>ceiling_date(
+  dt,
+  unit = &quot;days&quot;,
+  week_start = getOption(&quot;lubridate.week.start&quot;, 7)
+)</code></pre>
+<pre><code>## [1] &quot;2017-11-29 UTC&quot;</code></pre>
+<pre class="r"><code>ceiling_date(
+  ymd(20210721),
+  unit = &quot;weeks&quot;,
+  week_start = getOption(&quot;lubridate.week.start&quot;, 4)
+)</code></pre>
+<pre><code>## [1] &quot;2021-07-22&quot;</code></pre>
 <pre class="r"><code>x &lt;-  dmy(26052021)
 day(x)</code></pre>
 <pre><code>## [1] 26</code></pre>
@@ -1756,8 +1819,12 @@ wday(x, week_start = getOption(&quot;lubridate.week.start&quot;, 7)) &lt;- 1
 qday(x) &lt;- 92
 x</code></pre>
 <pre><code>## [1] &quot;2021-07-01&quot;</code></pre>
-<pre class="r"><code>rollback(dt)  #rollback(dates, roll_to_first = FALSE, preserve_hms = TRUE) Devuelve el último día del mes previo. </code></pre>
+<pre class="r"><code>rollback(dt)  #rollback(dates, roll_to_first = FALSE, preserve_hms = TRUE) Devuelve el último día del mes previo. Si Roll-to-first = TRUE 1er día del mismo mes </code></pre>
 <pre><code>## [1] &quot;2017-10-31 12:00:00 UTC&quot;</code></pre>
+<pre class="r"><code>rollbackward(dt, roll_to_first = TRUE) # rollback y rollbackward hacen lo mismo</code></pre>
+<pre><code>## [1] &quot;2017-11-01 12:00:00 UTC&quot;</code></pre>
+<pre class="r"><code>rollforward(dt, roll_to_first = FALSE) # si roll-to-first TRUE 1er. día mes siguiente, si FALSE último dia del mes actual</code></pre>
+<pre><code>## [1] &quot;2017-11-30 12:00:00 UTC&quot;</code></pre>
 </div>
 <div id="lapsos-de-tiempo" class="section level2">
 <h2>Lapsos de tiempo</h2>
@@ -1769,35 +1836,61 @@ x</code></pre>
 <ol style="list-style-type: decimal">
 <li><p>Cuando restas dos fechas obtienes un objeto difftime (pero no maneja meses o años). difftime registra un lapso de tiempo de segundos, minutos, horas, días o semanas. A veces es dificil de trabajar…</p></li>
 <li><p>durations en Lubridate lo maneja en segundos. Ojo!!! se pueden encontrar valores inesperados cuando se trabaja con durations…. por ej. si en una zona hay cambio de horario en periodo de verano… el día del cambio, ese día va a tener 23 horas en vez de 24!</p></li>
-<li><p>periodos maneja las fechas con parámetros “humanos”. O sea, que no tienen largo fijo en segundos, se debe especificar “units” para saber en que unidad se cuenta y se puede hacer con “dias” o “meses”. Es más intuitivo.Los períodos son más propensos a hacer lo que esperas que hagan</p></li>
+<li><p>periodos maneja las fechas con parámetros “humanos”. O sea, que no tienen largo fijo, se debe especificar “units” para saber en que unidad se cuenta y se puede hacer con dias, meses, años, horas, minutos, segundos. Es más intuitivo.Los períodos son más propensos a hacer lo que esperas que hagan. Cada una de estas unidades (excepto segundos) deben expresarse en valores enteros. Dentro de un periodo el tiempo total no tienen una longitud exacta hasta que se les agrega una fecha-hora: esto es así por los años bisiestos, las reglas de ahorro de luz y otras convenciones.</p></li>
+<li><p>difftime es una funcion que calcula la diferencia entre dos objetos tipo date/time y devuelve un objeto de clase “difftime” con un atributo indicando la unidad de tiempo.</p></li>
 </ol>
 <pre class="r"><code>difftime(today(), ymd(19610526), units = &quot;secs&quot;) </code></pre>
-<pre><code>## Time difference of 1895529600 secs</code></pre>
+<pre><code>## Time difference of 1898294400 secs</code></pre>
 <pre class="r"><code> # opciones validas para units: &quot;auto&quot;, &quot;secs&quot;, &quot;mins&quot;, &quot;hours&quot;, &quot;days&quot;, &quot;weeks&quot;
 
 dif_claudio_monica = difftime(ymd(20211013), ymd(20210526), units = &quot;weeks&quot;)
 
-edad_m = today() - ymd(19610526) #difftime
-edad_monica &lt;- as.duration(edad_m)
+dif_tiempo &lt;- make_difftime(3600, units = &quot;minute&quot;) #difftime lo hace en segundos y después lo convierte a minutos
+dif_tiempo</code></pre>
+<pre><code>## Time difference of 60 mins</code></pre>
+<pre class="r"><code>edad_m = today() - ymd(19610526) #difftime
+edad_m_s = ymd_hms(&quot;20210721 152000 UTC&quot;) - ymd_hms(&quot;19610526 120000 UTC&quot;)
+edad_m</code></pre>
+<pre><code>## Time difference of 21971 days</code></pre>
+<pre class="r"><code>edad_m_s #la diferencia de tiempo la definió igual en dias, con decimales por la hora</code></pre>
+<pre><code>## Time difference of 21971.14 days</code></pre>
+<pre class="r"><code>edad_monica &lt;- as.duration(edad_m)
 edad_monica</code></pre>
-<pre><code>## [1] &quot;1895529600s (~60.07 years)&quot;</code></pre>
+<pre><code>## [1] &quot;1898294400s (~60.15 years)&quot;</code></pre>
 <pre class="r"><code>minuto &lt;- dseconds(60)
 año &lt;- dyears(1)
-dif_con_claudio &lt;- dweeks(20)</code></pre>
+dif_con_claudio &lt;- dweeks(20)
+dif_con_claudio</code></pre>
+<pre><code>## [1] &quot;12096000s (~20 weeks)&quot;</code></pre>
 <pre class="r"><code># as.period(x, unit, ...)
 # x = an interval, difftime, or numeric object
-# unit = A character string that specifies which time units to build period in. unit is only implemented for the as.period.numeric method and the as.period.interval method. For as.period.interval, as.period will convert intervals to units no larger than the specified unit.
+# unit = una cadena de caracteres que especifique la unidad de tiempo para construir el  periodo. la unidad esta implementado  sólo para el método as.period.numeric y as.period.interval. Para as.period.interval, as.period convertirá los intervalo a unidades no más larga que la unidad especificada.
+
 una_pm &lt;- as_datetime(&quot;2016-01-01 13:00:00 EST&quot;)
 periodo_1 &lt;- as.period(edad_m)
 periodo_1 + days(3)</code></pre>
-<pre><code>## [1] &quot;21942d 0H 0M 0S&quot;</code></pre>
+<pre><code>## [1] &quot;21974d 0H 0M 0S&quot;</code></pre>
 <pre class="r"><code>leap &lt;- interval(ymd(&quot;20160101&quot;), ymd(&quot;20170101&quot;))
-leap_in_days &lt;- as.period(leap, unit = &quot;days&quot;)
-leap_in_years &lt;- as.period(leap, unit = &quot;years&quot;)
-ymd(&quot;20151231&quot;) + leap_in_days</code></pre>
+leap_in_days &lt;- as.period(leap, unit = &quot;days&quot;)   #366 dias
+leap_in_years &lt;- as.period(leap, unit = &quot;years&quot;) #1 año  
+
+#Al tener una fecha fija:
+ymd(&quot;20151231&quot;) + leap_in_days # 20161231 resuelve bien ya q tiene 366 días y 2016 es bisiesto</code></pre>
 <pre><code>## [1] &quot;2016-12-31&quot;</code></pre>
-<pre class="r"><code>ymd(&quot;20151231&quot;) + leap_in_years</code></pre>
+<pre class="r"><code>ymd(&quot;20151231&quot;) + leap_in_years # 20161231 resuelve bien</code></pre>
 <pre><code>## [1] &quot;2016-12-31&quot;</code></pre>
+<pre class="r"><code>ymd(20150228) + leap_in_days   # 20160229 porque 2016 es bisiesto y existe el 29/02</code></pre>
+<pre><code>## [1] &quot;2016-02-29&quot;</code></pre>
+<pre class="r"><code>ymd(20150228) + leap_in_years  # 2016-02-28 ok? tendría que dar 29 porque es bisiesto, pero hace un año de 365. VER BIEN!!!!!</code></pre>
+<pre><code>## [1] &quot;2016-02-28&quot;</code></pre>
+<pre class="r"><code>ymd(&quot;20160131&quot;) + leap_in_days # 20170131 </code></pre>
+<pre><code>## [1] &quot;2017-01-31&quot;</code></pre>
+<pre class="r"><code>ymd(20160331) - leap_in_days   # 20150331 resuelve bien</code></pre>
+<pre><code>## [1] &quot;2015-03-31&quot;</code></pre>
+<pre class="r"><code>ymd(20160331) - leap_in_years  </code></pre>
+<pre><code>## [1] &quot;2015-03-31&quot;</code></pre>
+<pre class="r"><code>ymd(&quot;20160229&quot;) + leap_in_years #NA porque 2017 no es bisiesto</code></pre>
+<pre><code>## [1] NA</code></pre>
 <pre class="r"><code>dst &lt;- interval(ymd(&quot;2016-11-06&quot;, tz = &quot;America/Chicago&quot;),
 ymd(&quot;2016-11-07&quot;, tz = &quot;America/Chicago&quot;))
 as.period(dst, unit = &quot;hours&quot;)</code></pre>
@@ -1892,6 +1985,28 @@ x1 - x2</code></pre>
 x4</code></pre>
 <pre><code>## [1] &quot;2015-06-01 12:00:00 EDT&quot; &quot;2015-06-01 12:00:00 EDT&quot;
 ## [3] &quot;2015-06-01 12:00:00 EDT&quot;</code></pre>
+<p>Para obtener fecha-hora en otra zona horaria, mantiene el momento cambia el visualizacion</p>
+<pre class="r"><code>dta &lt;- with_tz(dt, &quot;US/Pacific&quot;)
+dta</code></pre>
+<pre><code>## [1] &quot;2017-11-28 04:00:00 PST&quot;</code></pre>
+<pre class="r"><code>x4a &lt;- with_tz(x4, tzone = &quot;Australia/Lord_Howe&quot;)
+x4a</code></pre>
+<pre><code>## [1] &quot;2015-06-02 02:30:00 +1030&quot; &quot;2015-06-02 02:30:00 +1030&quot;
+## [3] &quot;2015-06-02 02:30:00 +1030&quot;</code></pre>
+<pre class="r"><code>dta - dt</code></pre>
+<pre><code>## Time difference of 0 secs</code></pre>
+<pre class="r"><code>x4 - x4a</code></pre>
+<pre><code>## Time differences in secs
+## [1] 0 0 0</code></pre>
+<p>Para se ha etiquetado mal la zona horaria, y se necesita arreglar.</p>
+<pre class="r"><code>force_tz(dt, &quot;US/Pacific&quot;)</code></pre>
+<pre><code>## [1] &quot;2017-11-28 12:00:00 PST&quot;</code></pre>
+</div>
+<div id="otras-funciones" class="section level2">
+<h2>Otras funciones:</h2>
+<p>date_decimal(decimal, tz = “UTC”) date_decimal(2017.5)<br />
+fast_strptime() strptime versión rápida. fast_strptime(‘9/1/01’, ‘%y/%m/%d’)<br />
+parse_date_time() funciones de análisis de fecha y hora fáciles de usar. parse_date_time(“9/1/01”, “ymd”)</p>
 <pre class="r"><code>OlsonNames() # devuelve la lista de nombres válidos de zonas horarias</code></pre>
 <pre><code>##   [1] &quot;Africa/Abidjan&quot;                   &quot;Africa/Accra&quot;                    
 ##   [3] &quot;Africa/Addis_Ababa&quot;               &quot;Africa/Algiers&quot;                  
@@ -2192,26 +2307,10 @@ x4</code></pre>
 ## [593] &quot;Zulu&quot;                            
 ## attr(,&quot;Version&quot;)
 ## [1] &quot;2021a&quot;</code></pre>
-<p>Para obtener fecha-hora en otra zona horaria, mantiene el momento cambia el visualizacion</p>
-<pre class="r"><code>dta &lt;- with_tz(dt, &quot;US/Pacific&quot;)
-dta</code></pre>
-<pre><code>## [1] &quot;2017-11-28 04:00:00 PST&quot;</code></pre>
-<pre class="r"><code>x4a &lt;- with_tz(x4, tzone = &quot;Australia/Lord_Howe&quot;)
-x4a</code></pre>
-<pre><code>## [1] &quot;2015-06-02 02:30:00 +1030&quot; &quot;2015-06-02 02:30:00 +1030&quot;
-## [3] &quot;2015-06-02 02:30:00 +1030&quot;</code></pre>
-<pre class="r"><code>dta - dt</code></pre>
-<pre><code>## Time difference of 0 secs</code></pre>
-<pre class="r"><code>x4 - x4a</code></pre>
-<pre><code>## Time differences in secs
-## [1] 0 0 0</code></pre>
-<p>Para se ha etiquetado mal la zona horaria, y se necesita arreglar.</p>
-<pre class="r"><code>force_tz(dt, &quot;US/Pacific&quot;)</code></pre>
-<pre><code>## [1] &quot;2017-11-28 12:00:00 PST&quot;</code></pre>
 </div>
-<div id="otras-funciones" class="section level2">
-<h2>Otras funciones:</h2>
-<p>date_decimal(decimal, tz = “UTC”) date_decimal(2017.5) fast_strptime() strptime versión rápida. fast_strptime(‘9/1/01’, ‘%y/%m/%d’) parse_date_time() funciones de análisis de fecha y hora fáciles de usar. parse_date_time(“9/1/01”, “ymd”)</p>
+<div id="para-saber-las-distintas-zonas-horarias." class="section level2">
+<h2>Para saber las distintas zonas horarias.</h2>
+<p>[Abrev Zonas horarias] <a href="https://www.ibm.com/docs/es/z-workload-scheduler/8.6.0?topic=SSRULV_8.6.0/com.ibm.tivoli.itws.doc_8.6/awsrgcompletetzt.htm" class="uri">https://www.ibm.com/docs/es/z-workload-scheduler/8.6.0?topic=SSRULV_8.6.0/com.ibm.tivoli.itws.doc_8.6/awsrgcompletetzt.htm</a></p>
 </div>
 </div>
 

@@ -50,7 +50,7 @@ is.instant(start_2012)  #TRUE
 ## Section 5.2. Intervals
 start_2011 <- ymd_hms("2011-01-01 12:00:00") 
 start_2010 <- ymd_hms("2010-01-01 12:00:00") 
-span <- start_2011 - start_2010  #2010-01-01 12:00:00 - 2011-01-01 12:00:00 
+span <- start_2010 %--% start_2011  #2010-01-01 12:00:00 - 2011-01-01 12:00:00 
 int_start(span)  #"2010-01-01 12:00:00 UTC" 
 int_end(span)  #"2011-01-01 12:00:00 UTC" 
 start_2010 + span  #"2011-01-01 12:00:00 UTC"
