@@ -1,0 +1,136 @@
+---
+title: "R Lakers"
+output:
+  html_document:
+    df_print: paged
+editor_options:
+  chunk_output_type: inline
+---
+
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(lubridate)
+
+#nrow(lakers)
+#ncol(lakers)
+summary(lakers)
+#view(lakers)
+```
+
+Vamos a ver un poco los datos
+```{r lakers_fix}
+ lakers_fix <- lakers %>% 
+  mutate(date = ymd(date), 
+         tiempo = lubridate::ms(time)) %>% 
+  select(date, period, tiempo, everything()) %>% 
+  arrange(date, period, tiempo)
+```
+
+```{r resultados solo cuando se hacen tiros}
+resultados <- lakers_fix %>% 
+  filter(result != "") %>% 
+  mutate(result = factor(result))
+```
+
+```{r grafico_POR_x_team }
+resultados %>% 
+  filter(date == ymd(20081028) & !is.na(x) & !is.na(y)) %>% 
+  ggplot(aes(x, y, color = team)) +
+  geom_point() +
+  labs(
+    x = "largo cancha",
+    y = "ancho cancha - aros", 
+    title = "Posiciones de tiros efectuados al Aro",
+    subtitle = "Diferenciado por Equipos",
+    caption = "Partido Lakers vs POR - Fecha 28-10-2008"
+  )
+```
+
+```{r grafico_POR_x_player_resultado}
+resultados_player <- resultados %>% 
+  filter(date == ymd(20081028) & !is.na(x) & !is.na(y)) %>%
+  mutate(player = fct_lump(as.factor(player), n = 10)) 
+  
+player_cantidad  <-  resultados_player %>%  count(player) %>% mutate(n = if_else(player=="Other", 1, as.double(n)))
+
+
+resultados_cant_player <- resultados_player %>% left_join(player_cantidad)
+
+data_1 <- resultados_cant_player %>% filter(result == "made")
+data_2 <- resultados_cant_player %>% filter(result == "made", points == 3, player != "Other") 
+  
+resultados_cant_player %>%   
+  ggplot(aes(x, y, color = player, shape = team)) +
+  geom_point(size = 4) + 
+  geom_point(data = data_1, aes(x, y), color = "white", size = 2) +
+  ggrepel::geom_label_repel(aes(label = player), data = data_2, size = 2.5, max.overlaps = 3, show.legend = FALSE) +
+  labs( x = "largo cancha",
+      y = "ancho cancha - aros", 
+      title = "Posiciones de Tiro de Jugadores",
+      subtitle = "Relleno blanco en tiros convertidos - figura según equipo",
+      caption = "Partido Lakers vs POR - Fecha 28-10-2008")
+  
+```
+
+```{r puntaje_x_equipo_tiempo}
+lakers20081028_LAL  <- lakers_fix %>% 
+  filter(date == ymd(20081028) & team == "LAL") %>% 
+  select(period, team, tiempo, etype, points, type) %>% 
+  arrange(period, tiempo) %>% 
+  mutate(puntaje = cumsum(points)) %>% 
+  group_by(period, tiempo, team) %>% 
+    summarise(
+      accion = max(etype),
+      total_puntos = max(puntaje))
+
+lakers_20081028_POR  <- lakers_fix %>% 
+  filter(date == ymd(20081028) & team == "POR") %>% 
+  select(period, team, tiempo, etype, points, type) %>% 
+  arrange(period, tiempo) %>% 
+  mutate(puntaje = cumsum(points)) %>% 
+  group_by(period, tiempo, team) %>% 
+    summarise(
+      accion = max(etype),
+      total_puntos = max(puntaje))
+
+lakers_20081028 <- lakers20081028_LAL %>% 
+  union(lakers_20081028_POR) %>% 
+  arrange(period, tiempo, team) %>% 
+  mutate(team = factor(team))
+```
+
+```{r ggplot_tiempo_puntaje_abierto por equipo}
+lakers_20081028 %>% 
+  mutate(period = paste0("Periodo:", period),
+         tiempo = tiempo/minutes(1),
+         accion = as.factor(accion), 
+         accion = fct_collapse(accion, sancion = c("foul", "violation"), other = c("timeout", "sub"))) %>% 
+  ggplot(aes(tiempo, total_puntos)) +
+  geom_line(aes(color = team)) +
+  geom_point(aes(shape = accion, color = team)) +
+  facet_grid(. ~ period) +
+  labs( x = "Periodos Partido",
+      y = "Marcador del Partido", 
+      title = "Resultado Partido por Periodos",
+      subtitle = "Acciones realizadas en cada tiempo - figura según tipo acción",
+      caption = "Partido Lakers vs POR - Fecha 28-10-2008")
+```
+
+```{r ggplot_tiempo_puntaje_tiros por equipo, warning=FALSE}
+lakers_20081028 %>% 
+  filter(accion %in% c("shot", "free throw")) %>% 
+  mutate(period = paste0("Periodo:", period),
+    accion = factor(accion, levels = c("shot", "free throw"), ordered = TRUE)) %>% 
+  ggplot(aes(tiempo/seconds(60), total_puntos)) +
+  geom_line(aes(color = team)) +
+  geom_point(aes(shape = accion, color = team), size = 2) +
+  facet_grid(. ~ period) +
+  labs( x = "Periodos Partido",
+      y = "Marcador del Partido", 
+      title = "Resultado Partido por Periodos",
+      subtitle = "Disparos y  Tiros libres en cada tiempo - figura según tipo acción",
+      caption = "Partido Lakers vs POR - Fecha 28-10-2008")
+```
+  
+

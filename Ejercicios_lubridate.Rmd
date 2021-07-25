@@ -11,14 +11,25 @@ editor_options:
 library(tidyverse)
 library(datos)
 library(lubridate)
+library(hms)
 ```
+
 **Tener en cuenta que lubridate no se carga con library(tidyverse)**   
 Un dato **date-time** es un punto en el tiempo, almacenado como el nro de segundos desde el 01-01-1970 00:00:00 UTC. 
+
+
 ```{r as_datetime}
 dt <- as_datetime(1511870400)
 ## "2017-11-28 12:00:00 UTC"
+unclass(dt)
+dt
+typeof(dt)
+is.numeric(dt)
+mode(dt)
 ```
-Un dato tipo **date** es una fecha almacenada como el nro. de días desde el 01-01-1970.
+Ver el siguiente [libro](https://bookdown.org/hneth/ds4psy/10-2-time-essentials.html): 
+
+Un dato tipo **date** es una fecha almacenada como integer: el nro. de días desde el 01-01-1970.
 ```{r as_date}
 d <- as_date(17498)
 ## "2017-11-28"
@@ -28,18 +39,126 @@ Un dato tipo **time** es una hora almacenada como el nro. de segundos desde 00:0
 t <- hms::as_hms(85)
 t
 ```
-**Es importante la clase de date_time** (son las implementaciones internas de date-time):   
-La clase **POSIXct** almacena internamente esta cifra como un número entero, mientras que la clase **POSIXlt** la descompone en una lista con elementos para los segundos, minutos, horas, día, mes y año.
+**las clases  date_time** implementadas en R: 
+
+1. `Date` representa la fecha en dias sin considerar horas
+1. `POSIXct` es la principal clase date-time para representar tiempo calendario.
+1. `POSIXlt` es una clase date-time adicional para representar local time (como listas).
+
+
+```{r Dates}
+Sys.Date()
+date() # R base (da warning xq no tiene x... pero así escrito trae la fecha actual)
+lubridate::today()
+as.Date(0, origin = "1970-01-01")
+#Sys.getlocale(category = "LC_ALL")
+```
+¿Que pasa con las fechas anteriores a 01-01-1970? las considera en negativo.
+```{r Titanic}
+dt_Titanic <- as.Date("1912-04-15")
+unclass(dt_Titanic)
+```
+
+REVISAR: La clase **POSIXct** almacena internamente esta cifra como un número entero, mientras que la clase **POSIXlt** la descompone en una lista con elementos para los segundos, minutos, horas, día, mes y año.
+
+## Formatos
+Es importante cómo R puede interpretar la fecha que ingresamos:
+
+```{r formato}
+format(dt_Titanic, "The date %F denotes a %A in %B, in the %V. week of the year %Y.")
+
+as.Date("01-2-3") # no entiende 2001... entiende 0001
+as.Date("01/2/3")
+```
+La mejor forma de entrar fechas es con formato 4 dígito para año, 2 dígito para mes y 2 dígitos para día. Es el formato por default que utiliza R y la especificación de conversión sería: `"%Y-%m-%d"`
+
+%Y año de 4 posiciones
+%y año de 2 posiciones
+%m mes de 2 posiciones
+%d dia de 2 posiciones
+
+* Siempre conviene entrar la fecha con año de 4 posiciones.  
+* Usar un orden razonable de las unidades para especificar la fecha (idealmente decreciente `"%Y-%m-%d"`).  
+1. (EU convention)   magnitud creciente `"%d-%m-%Y"`  
+1. (ISO standard, R) magnitud creciente `"%Y-%m-%d"`  
+
+Para nombrar los días de la semana y los meses se utiliza la función `format` con los siguientes argumentos:  
+
+%a: Abbreviated weekday name (**in the current system locale**). Options are: Mon, Tue, Wed, Thu, Fri, Sat, Sun  
+
+%A: Full weekday name (…):  
+Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday  
+
+%b: Abbreviated month name (…):  
+Jan, Feb, Mar, Apr, May, Jun, Jul, Aug, Sep, Oct, Nov, Dec  
+
+%B: Full month name (…):  
+January, February, March, April, May, June, July, August, September, October, November, December  
+Otras: Ver `?strptime  # for a list of possible format symbols` 
+
+%C: Century ast two-digit decimal number (00–99): the integer part of the year divided by 100: 20
+
+%e: Day of the month as an integer (1–31), with a prefix space for a single-digit number: 19
+
+%h: Equivalent to %b: Jul
+
+%H: Hours as two-digit decimal number (00–23): 15
+
+%I: Hours as two-digit decimal number (01–12): 03
+
+%j: Day of year as three-digit decimal number (001–366): 200
+
+%M: Minute as two-digit decimal number (00–59): 04
+
+%p: AM/PM indicator in the locale. Used in conjunction with %I and not with %H: PM
+
+%S: Second as two-digit integer (00–61), allowing for up to two leap-seconds: 12
+
+%u: Weekday as single-digit decimal number (1–7, Monday is 1): 1
+
+%U: Week of the year as two-digit decimal number (00–53) using Sunday as the first day 1 of the week (US convention): 29
+
+%V: Week of the year as two-digit decimal number (01–53) as defined in ISO 8601: 29
+
+%w: Weekday as single-digit decimal number (0–6, Sunday is 0): 1
+
+%W: Week of the year as two-digit decimal number (00–53), using Monday as the first day of week (UK convention): 29
+
+For details on additional specifications, evaluate `?strftime()` on your system.
+
+```{r format explicate_date}
+explicate_date <- "La fecha '%y-%m-%d' es un día %A en %B de %Y."
+
+format("Sys.Date()", format = explicate_date)
+```
+También se pueden leer strings que contienen fechas:  
+```{r transformar_segun_formatos_fecha}
+parse_date("29 abril 2020", format = "%d %B %Y", locale = locale("es"))
+parse_date("29 Abril 2020", format = "%d %B %Y", locale = locale("es"))
+parse_date("April 29, 2020", format = "%B %d, %Y")
+
+local_time(dt, tz = NULL, units = "secs")
+local_time(dt, tz = "America/Buenos_Aires")
+
+as.Date("Mar., 20/06/30", format = "%a, %y/%m/%d", locale = locale("es")) #ojo que en español la abreviatura lleva punto
+as.Date("Julio 1, 2020", format = "%B %d, %Y")
+as.Date("el 2do dia de Julio (en 2020)", format = "el %ddo dia de %B (en %Y)")
+
+#Importante ver con la funcion locale()
+```
 
 
 ## Transformar Date-Times
 
 Convierte cadena de caracteres o numeros a formato Date-time:  
-1. Identifica el orden del año, mes, día, hora, minuto y segundo en tus datos 
+1. Identifica el orden del año, mes, día, hora, minuto y segundo en tus datos. 
 1. Usa las siguientes funciones cuyo nombre replica el orden de tus datos
+
+
 
 ```{r ymd_hms}
 ymd_hms("2017-11-28T14:02:00") #también se puede usar ymd_hm(), ymd_h()
+# se puede usar la T o dejar en blanco
 ```
 ```{r ydm_hms}
 ydm_hms("2017-22-12 10:00:00") #también se puede usar  ydm_hm(), ydm_h()
@@ -71,7 +190,27 @@ yq("2001: Q3")  #Q para el trimestre.
 ```{r hms}
 hms::hms(sec = 0, min = 1, hours = 2)
 #También lubridate::hms(), hm() y ms(), que devuelven periodos.
+
 ```
+## Parsear y recuperar times: 
+
+```{r ahora y formatos}
+# parse times:
+(tm1 <- as.POSIXct("10:30:45", format = "%H:%M:%S"))
+#> [1] "2021-04-10 10:30:45 CEST"
+(tm2 <- as.POSIXct("16:45", format = "%H:%M"))
+#> [1] "2021-04-10 16:45:00 CEST"
+(tm3 <- as.POSIXct("2.30 am", format = "%I.%M %p"))
+#> [1] "2021-04-10 02:30:00 CEST"
+(tm4 <- as.POSIXct("5 pm", format = "%I %p"))
+#> [1] "2021-04-10 17:00:00 CEST"
+
+ahora <- now()
+explicate_time <- "%a, %Y-%m-%d %H:%M:%S %Z (%z from UTC)"
+format(ahora, format = explicate_time)
+
+```
+
 
 ## Extrae o define algún componente de fecha
 * Usa una función para conseguir un componente.   
@@ -135,6 +274,17 @@ now() #now(tzone = “") Hora actual en tz  devuelve fecha-hora con indicaciòn 
 ```{r today}
 today()   # today(tzone = "") Fecha actual en un tz  
 ```
+
+## Operaciones con Date/Date-Time
+```{r}
+next_week <- Sys.Date() + 0:6 #calcula los 7 días de la semana
+every_2_weeks  <- seq(dt, length = 10, by = "2 weeks")
+nueva_fecha <- ymd(20210731)
+every_month <- seq(nueva_fecha, length =  12, by = "months") # ver que los meses de 30 o 28 días, no los deja "mal", pero los lleva a días del mes siguiente lo maneja como periods
+every_2_weeks
+every_month
+```
+
 
  
 ## Redondea Date-time 
@@ -244,11 +394,13 @@ rollforward(dt, roll_to_first = FALSE) # si roll-to-first TRUE 1er. día mes sig
 
 1. periodos maneja las fechas con parámetros "humanos". O sea, que no tienen largo fijo, se debe especificar "units" para saber en que unidad se cuenta y se puede hacer  con dias, meses, años, horas, minutos, segundos. Es más intuitivo.Los períodos son más propensos a hacer lo que esperas que hagan. Cada una de estas unidades (excepto segundos) deben expresarse en valores enteros. Dentro de un periodo el tiempo total no tienen una longitud exacta hasta que se les agrega una fecha-hora: esto es así por los años bisiestos, las reglas de ahorro de luz y otras convenciones.
 
-1. difftime es una funcion que calcula la diferencia entre dos objetos tipo date/time y devuelve un objeto de clase "difftime" con un atributo indicando la unidad de tiempo.
+1. difftime es una funcion que calcula la diferencia entre dos objetos tipo date/time y devuelve un objeto de clase "difftime" con un atributo indicando la unidad de tiempo. 
 
 ```{r difftime}
 difftime(today(), ymd(19610526), units = "secs") 
  # opciones validas para units: "auto", "secs", "mins", "hours", "days", "weeks"
+
+difftime(now(), ymd_hms(19610526100125), units = "secs")
 
 dif_claudio_monica = difftime(ymd(20211013), ymd(20210526), units = "weeks")
 
@@ -359,6 +511,40 @@ wday(ymd(20200526))
 ```
 
 ## Zonas Horarias
+Por que son importantes las zonas horarias:
+
+
+1. Especificando las zonas horarias te permite ajustar automáticamente la epoca de salvado de energía daylight saving time (DST) al hacer operaciones time differences (para la misma locación).
+
+```{r DST- MANEJO DE ZONA HORARIA }
+# Note: automatically adjusts for daylight saving time (DST):
+
+t1 <- "2020-03-29 00:00:00"  # before switch to DST
+t2 <- "2020-03-29 03:00:00"  # after switch to DST
+
+# UTC (without time shift):
+as.POSIXct(t2, tz = "UTC") - as.POSIXct(t1, tz = "UTC")
+#> Time difference of 3 hours
+
+# Germany (with daylight saving time, DST):
+as.POSIXct(t2, tz = "Europe/Berlin") - as.POSIXct(t1, tz = "Europe/Berlin")
+#> Time difference of 2 hours
+```
+
+
+2. Especificando time zones permite calcular diferencia de tiempo entre horas en diferentes locaciones:
+
+```{r DIFERENCIAS DE TIEMPO ENTRE DISTINTAS LOCACIONES}
+# Shifting Xmas eve across locations:
+txmas <- "2020-12-24 20:00:00"
+
+as.POSIXct(txmas, tz = "UTC") - as.POSIXct(txmas, tz = "Australia/Sydney") 
+#> Time difference of 11 hours
+as.POSIXct(txmas, tz = "UTC") - as.POSIXct(txmas, tz = "Europe/Berlin") 
+#> Time difference of 1 hours
+as.POSIXct(txmas, tz = "UTC") - as.POSIXct(txmas, tz = "US/Pacific")
+#> Time difference of -8 hours
+```
 
 R reconoce aprox. 600 zonas horarias. Cada una  incluye la zona horaria, horario de verano y variaciones históricas del calendario para un área. R asigna una zona horaria por vector.
 **Usa la zona horaria UTC** para evitar el Horario de Verano
@@ -368,6 +554,11 @@ El primer desafío es que los nombres comunes de los husos horarios tienden a se
 Como saber el uso horario de tu sistema:
 ```{r sys.timezone}
 Sys.timezone()
+
+as.POSIXct("2020-12-24 23:59:59", tz = "GMT")
+as.POSIXct("2020-12-24 23:59:59", tz = "Europe/London")
+as.POSIXct("2020-12-24 23:59:59", tz = "Europe/Moscow")
+as.POSIXct("2020-12-24 23:59:59", tz = "Europe/Berlin")
 ```
 
 En R, el huso horario es un atributo de la fecha-hora (date-time)
@@ -424,3 +615,8 @@ OlsonNames() # devuelve la lista de nombres válidos de zonas horarias
 ## Para saber las distintas zonas horarias.
 [Abrev Zonas horarias] <https://www.ibm.com/docs/es/z-workload-scheduler/8.6.0?topic=SSRULV_8.6.0/com.ibm.tivoli.itws.doc_8.6/awsrgcompletetzt.htm>
 
+
+## Documentacion para leer:
+En consola:   
+?DateTimeClasses  
+?Dates  

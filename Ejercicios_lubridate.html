@@ -1626,22 +1626,123 @@ pre code {
 <p><strong>Tener en cuenta que lubridate no se carga con library(tidyverse)</strong><br />
 Un dato <strong>date-time</strong> es un punto en el tiempo, almacenado como el nro de segundos desde el 01-01-1970 00:00:00 UTC.</p>
 <pre class="r"><code>dt &lt;- as_datetime(1511870400)
-## &quot;2017-11-28 12:00:00 UTC&quot;</code></pre>
-<p>Un dato tipo <strong>date</strong> es una fecha almacenada como el nro. de días desde el 01-01-1970.</p>
+## &quot;2017-11-28 12:00:00 UTC&quot;
+unclass(dt)</code></pre>
+<pre><code>## [1] 1511870400
+## attr(,&quot;tzone&quot;)
+## [1] &quot;UTC&quot;</code></pre>
+<pre class="r"><code>dt</code></pre>
+<pre><code>## [1] &quot;2017-11-28 12:00:00 UTC&quot;</code></pre>
+<pre class="r"><code>typeof(dt)</code></pre>
+<pre><code>## [1] &quot;double&quot;</code></pre>
+<pre class="r"><code>is.numeric(dt)</code></pre>
+<pre><code>## [1] FALSE</code></pre>
+<pre class="r"><code>mode(dt)</code></pre>
+<pre><code>## [1] &quot;numeric&quot;</code></pre>
+<p>Ver el siguiente <a href="https://bookdown.org/hneth/ds4psy/10-2-time-essentials.html">libro</a>:</p>
+<p>Un dato tipo <strong>date</strong> es una fecha almacenada como integer: el nro. de días desde el 01-01-1970.</p>
 <pre class="r"><code>d &lt;- as_date(17498)
 ## &quot;2017-11-28&quot;</code></pre>
 <p>Un dato tipo <strong>time</strong> es una hora almacenada como el nro. de segundos desde 00:00:00</p>
 <pre class="r"><code>t &lt;- hms::as_hms(85)
 t</code></pre>
 <pre><code>## 00:01:25</code></pre>
-<p><strong>Es importante la clase de date_time</strong> (son las implementaciones internas de date-time):<br />
-La clase <strong>POSIXct</strong> almacena internamente esta cifra como un número entero, mientras que la clase <strong>POSIXlt</strong> la descompone en una lista con elementos para los segundos, minutos, horas, día, mes y año.</p>
+<p><strong>las clases date_time</strong> implementadas en R:</p>
+<ol style="list-style-type: decimal">
+<li><code>Date</code> representa la fecha en dias sin considerar horas</li>
+<li><code>POSIXct</code> es la principal clase date-time para representar tiempo calendario.</li>
+<li><code>POSIXlt</code> es una clase date-time adicional para representar local time.</li>
+</ol>
+<pre class="r"><code>Sys.Date()</code></pre>
+<pre><code>## [1] &quot;2021-07-24&quot;</code></pre>
+<pre class="r"><code>date() # R base (da warning xq no tiene x... pero así escrito trae la fecha actual)</code></pre>
+<pre><code>## [1] &quot;Sat Jul 24 22:01:28 2021&quot;</code></pre>
+<pre class="r"><code>lubridate::today()</code></pre>
+<pre><code>## [1] &quot;2021-07-24&quot;</code></pre>
+<pre class="r"><code>as.Date(0, origin = &quot;1970-01-01&quot;)</code></pre>
+<pre><code>## [1] &quot;1970-01-01&quot;</code></pre>
+<pre class="r"><code>#Sys.getlocale(category = &quot;LC_ALL&quot;)</code></pre>
+<p>¿Que pasa con las fechas anteriores a 01-01-1970? las considera en negativo.</p>
+<pre class="r"><code>dt_Titanic &lt;- as.Date(&quot;1912-04-15&quot;)
+unclass(dt_Titanic)</code></pre>
+<pre><code>## [1] -21080</code></pre>
+<p>REVISAR: La clase <strong>POSIXct</strong> almacena internamente esta cifra como un número entero, mientras que la clase <strong>POSIXlt</strong> la descompone en una lista con elementos para los segundos, minutos, horas, día, mes y año.</p>
+<div id="formatos" class="section level2">
+<h2>Formatos</h2>
+<p>Es importante cómo R puede interpretar la fecha que ingresamos:</p>
+<pre class="r"><code>format(dt_Titanic, &quot;The date %F denotes a %A in %B, in the %V. week of the year %Y.&quot;)</code></pre>
+<pre><code>## [1] &quot;The date 1912-04-15 denotes a lunes in abril, in the 16. week of the year 1912.&quot;</code></pre>
+<pre class="r"><code>as.Date(&quot;01-2-3&quot;) # no entiende 2001... entiende 0001</code></pre>
+<pre><code>## [1] &quot;0001-02-03&quot;</code></pre>
+<pre class="r"><code>as.Date(&quot;01/2/3&quot;)</code></pre>
+<pre><code>## [1] &quot;0001-02-03&quot;</code></pre>
+<p>La mejor forma de entrar fechas es con formato 4 dígito para año, 2 dígito para mes y 2 dígitos para día. Es el formato por default que utiliza R y la especificación de conversión sería: <code>&quot;%Y-%m-%d&quot;</code></p>
+<p>%Y año de 4 posiciones %y año de 2 posiciones %m mes de 2 posiciones %d dia de 2 posiciones</p>
+<ul>
+<li>Siempre conviene entrar la fecha con año de 4 posiciones.<br />
+</li>
+<li>Usar un orden razonable de las unidades para especificar la fecha (idealmente decreciente <code>&quot;%Y-%m-%d&quot;</code>).<br />
+</li>
+</ul>
+<ol style="list-style-type: decimal">
+<li>(EU convention) magnitud creciente <code>&quot;%d-%m-%Y&quot;</code><br />
+</li>
+<li>(ISO standard, R) magnitud creciente <code>&quot;%Y-%m-%d&quot;</code></li>
+</ol>
+<p>Para nombrar los días de la semana y los meses se utiliza la función <code>format</code> con los siguientes argumentos:</p>
+<p>%a: Abbreviated weekday name (<strong>in the current system locale</strong>). Options are: Mon, Tue, Wed, Thu, Fri, Sat, Sun</p>
+<p>%A: Full weekday name (…):<br />
+Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday</p>
+<p>%b: Abbreviated month name (…):<br />
+Jan, Feb, Mar, Apr, May, Jun, Jul, Aug, Sep, Oct, Nov, Dec</p>
+<p>%B: Full month name (…):<br />
+January, February, March, April, May, June, July, August, September, October, November, December<br />
+Otras: Ver <code>?strptime  # for a list of possible format symbols</code></p>
+<p>%C: Century ast two-digit decimal number (00–99): the integer part of the year divided by 100: 20</p>
+<p>%e: Day of the month as an integer (1–31), with a prefix space for a single-digit number: 19</p>
+<p>%h: Equivalent to %b: Jul</p>
+<p>%H: Hours as two-digit decimal number (00–23): 15</p>
+<p>%I: Hours as two-digit decimal number (01–12): 03</p>
+<p>%j: Day of year as three-digit decimal number (001–366): 200</p>
+<p>%M: Minute as two-digit decimal number (00–59): 04</p>
+<p>%p: AM/PM indicator in the locale. Used in conjunction with %I and not with %H: PM</p>
+<p>%S: Second as two-digit integer (00–61), allowing for up to two leap-seconds: 12</p>
+<p>%u: Weekday as single-digit decimal number (1–7, Monday is 1): 1</p>
+<p>%U: Week of the year as two-digit decimal number (00–53) using Sunday as the first day 1 of the week (US convention): 29</p>
+<p>%V: Week of the year as two-digit decimal number (01–53) as defined in ISO 8601: 29</p>
+<p>%w: Weekday as single-digit decimal number (0–6, Sunday is 0): 1</p>
+<p>%W: Week of the year as two-digit decimal number (00–53), using Monday as the first day of week (UK convention): 29</p>
+<p>For details on additional specifications, evaluate <code>?strftime()</code> on your system.</p>
+<pre class="r"><code>explicate_date &lt;- &quot;La fecha &#39;%y-%m-%d&#39; es un día %A en %B de %Y.&quot;
+
+format(&quot;Sys.Date()&quot;, format = explicate_date)</code></pre>
+<pre><code>## [1] &quot;Sys.Date()&quot;</code></pre>
+<p>También se pueden leer strings que contienen fechas:</p>
+<pre class="r"><code>parse_date(&quot;29 abril 2020&quot;, format = &quot;%d %B %Y&quot;, locale = locale(&quot;es&quot;))</code></pre>
+<pre><code>## [1] &quot;2020-04-29&quot;</code></pre>
+<pre class="r"><code>parse_date(&quot;29 Abril 2020&quot;, format = &quot;%d %B %Y&quot;, locale = locale(&quot;es&quot;))</code></pre>
+<pre><code>## [1] &quot;2020-04-29&quot;</code></pre>
+<pre class="r"><code>parse_date(&quot;April 29, 2020&quot;, format = &quot;%B %d, %Y&quot;)</code></pre>
+<pre><code>## [1] &quot;2020-04-29&quot;</code></pre>
+<pre class="r"><code>local_time(dt, tz = NULL, units = &quot;secs&quot;)</code></pre>
+<pre><code>## Time difference of 43200 secs</code></pre>
+<pre class="r"><code>local_time(dt, tz = &quot;America/Buenos_Aires&quot;)</code></pre>
+<pre><code>## Time difference of 32400 secs</code></pre>
+<pre class="r"><code>as.Date(&quot;Mar., 20/06/30&quot;, format = &quot;%a, %y/%m/%d&quot;, locale = locale(&quot;es&quot;)) #ojo que en español la abreviatura lleva punto</code></pre>
+<pre><code>## [1] &quot;2020-06-30&quot;</code></pre>
+<pre class="r"><code>as.Date(&quot;Julio 1, 2020&quot;, format = &quot;%B %d, %Y&quot;)</code></pre>
+<pre><code>## [1] &quot;2020-07-01&quot;</code></pre>
+<pre class="r"><code>as.Date(&quot;el 2do dia de Julio (en 2020)&quot;, format = &quot;el %ddo dia de %B (en %Y)&quot;)</code></pre>
+<pre><code>## [1] &quot;2020-07-02&quot;</code></pre>
+<pre class="r"><code>#Importante ver con la funcion locale()</code></pre>
+</div>
 <div id="transformar-date-times" class="section level2">
 <h2>Transformar Date-Times</h2>
 <p>Convierte cadena de caracteres o numeros a formato Date-time:<br />
-1. Identifica el orden del año, mes, día, hora, minuto y segundo en tus datos 1. Usa las siguientes funciones cuyo nombre replica el orden de tus datos</p>
+1. Identifica el orden del año, mes, día, hora, minuto y segundo en tus datos. 1. Usa las siguientes funciones cuyo nombre replica el orden de tus datos</p>
 <pre class="r"><code>ymd_hms(&quot;2017-11-28T14:02:00&quot;) #también se puede usar ymd_hm(), ymd_h()</code></pre>
 <pre><code>## [1] &quot;2017-11-28 14:02:00 UTC&quot;</code></pre>
+<pre class="r"><code># se puede usar la T o dejar en blanco</code></pre>
 <pre class="r"><code>ydm_hms(&quot;2017-22-12 10:00:00&quot;) #también se puede usar  ydm_hm(), ydm_h()</code></pre>
 <pre><code>## [1] &quot;2017-12-22 10:00:00 UTC&quot;</code></pre>
 <pre class="r"><code>mdy_hms(&quot;11/28/2017 1:02:03&quot;) #también se puede usar mdy_hm(), mdy_h(). </code></pre>
@@ -1659,6 +1760,27 @@ La clase <strong>POSIXct</strong> almacena internamente esta cifra como un núme
 <pre class="r"><code>hms::hms(sec = 0, min = 1, hours = 2)</code></pre>
 <pre><code>## 02:01:00</code></pre>
 <pre class="r"><code>#También lubridate::hms(), hm() y ms(), que devuelven periodos.</code></pre>
+</div>
+<div id="parsear-y-recuperar-times" class="section level2">
+<h2>Parsear y recuperar times:</h2>
+<pre class="r"><code># parse times:
+(tm1 &lt;- as.POSIXct(&quot;10:30:45&quot;, format = &quot;%H:%M:%S&quot;))</code></pre>
+<pre><code>## [1] &quot;2021-07-24 10:30:45 -03&quot;</code></pre>
+<pre class="r"><code>#&gt; [1] &quot;2021-04-10 10:30:45 CEST&quot;
+(tm2 &lt;- as.POSIXct(&quot;16:45&quot;, format = &quot;%H:%M&quot;))</code></pre>
+<pre><code>## [1] &quot;2021-07-24 16:45:00 -03&quot;</code></pre>
+<pre class="r"><code>#&gt; [1] &quot;2021-04-10 16:45:00 CEST&quot;
+(tm3 &lt;- as.POSIXct(&quot;2.30 am&quot;, format = &quot;%I.%M %p&quot;))</code></pre>
+<pre><code>## [1] NA</code></pre>
+<pre class="r"><code>#&gt; [1] &quot;2021-04-10 02:30:00 CEST&quot;
+(tm4 &lt;- as.POSIXct(&quot;5 pm&quot;, format = &quot;%I %p&quot;))</code></pre>
+<pre><code>## [1] NA</code></pre>
+<pre class="r"><code>#&gt; [1] &quot;2021-04-10 17:00:00 CEST&quot;
+
+ahora &lt;- now()
+explicate_time &lt;- &quot;%a, %Y-%m-%d %H:%M:%S %Z (%z from UTC)&quot;
+format(ahora, format = explicate_time)</code></pre>
+<pre><code>## [1] &quot;sáb., 2021-07-24 22:01:28 -03 (-0300 from UTC)&quot;</code></pre>
 </div>
 <div id="extrae-o-define-algún-componente-de-fecha" class="section level2">
 <h2>Extrae o define algún componente de fecha</h2>
@@ -1719,9 +1841,26 @@ d</code></pre>
 <div id="funciones-muy-ùtiles-en-programación" class="section level2">
 <h2>Funciones muy ùtiles en programación</h2>
 <pre class="r"><code>now() #now(tzone = “&quot;) Hora actual en tz  devuelve fecha-hora con indicaciòn del tiempo +/- a UTC</code></pre>
-<pre><code>## [1] &quot;2021-07-21 17:43:00 -03&quot;</code></pre>
+<pre><code>## [1] &quot;2021-07-24 22:01:29 -03&quot;</code></pre>
 <pre class="r"><code>today()   # today(tzone = &quot;&quot;) Fecha actual en un tz  </code></pre>
-<pre><code>## [1] &quot;2021-07-21&quot;</code></pre>
+<pre><code>## [1] &quot;2021-07-24&quot;</code></pre>
+</div>
+<div id="operaciones-con-datedate-time" class="section level2">
+<h2>Operaciones con Date/Date-Time</h2>
+<pre class="r"><code>next_week &lt;- Sys.Date() + 0:6 #calcula los 7 días de la semana
+every_2_weeks  &lt;- seq(dt, length = 10, by = &quot;2 weeks&quot;)
+nueva_fecha &lt;- ymd(20210731)
+every_month &lt;- seq(nueva_fecha, length =  12, by = &quot;months&quot;) # ver que los meses de 30 o 28 días, no los deja &quot;mal&quot;, pero los lleva a días del mes siguiente lo maneja como periods
+every_2_weeks</code></pre>
+<pre><code>##  [1] &quot;2017-11-28 12:00:00 UTC&quot; &quot;2017-12-12 12:00:00 UTC&quot;
+##  [3] &quot;2017-12-26 12:00:00 UTC&quot; &quot;2018-01-09 12:00:00 UTC&quot;
+##  [5] &quot;2018-01-23 12:00:00 UTC&quot; &quot;2018-02-06 12:00:00 UTC&quot;
+##  [7] &quot;2018-02-20 12:00:00 UTC&quot; &quot;2018-03-06 12:00:00 UTC&quot;
+##  [9] &quot;2018-03-20 12:00:00 UTC&quot; &quot;2018-04-03 12:00:00 UTC&quot;</code></pre>
+<pre class="r"><code>every_month</code></pre>
+<pre><code>##  [1] &quot;2021-07-31&quot; &quot;2021-08-31&quot; &quot;2021-10-01&quot; &quot;2021-10-31&quot; &quot;2021-12-01&quot;
+##  [6] &quot;2021-12-31&quot; &quot;2022-01-31&quot; &quot;2022-03-03&quot; &quot;2022-03-31&quot; &quot;2022-05-01&quot;
+## [11] &quot;2022-05-31&quot; &quot;2022-07-01&quot;</code></pre>
 </div>
 <div id="redondea-date-time" class="section level2">
 <h2>Redondea Date-time</h2>
@@ -1840,10 +1979,12 @@ x</code></pre>
 <li><p>difftime es una funcion que calcula la diferencia entre dos objetos tipo date/time y devuelve un objeto de clase “difftime” con un atributo indicando la unidad de tiempo.</p></li>
 </ol>
 <pre class="r"><code>difftime(today(), ymd(19610526), units = &quot;secs&quot;) </code></pre>
-<pre><code>## Time difference of 1898294400 secs</code></pre>
+<pre><code>## Time difference of 1898553600 secs</code></pre>
 <pre class="r"><code> # opciones validas para units: &quot;auto&quot;, &quot;secs&quot;, &quot;mins&quot;, &quot;hours&quot;, &quot;days&quot;, &quot;weeks&quot;
 
-dif_claudio_monica = difftime(ymd(20211013), ymd(20210526), units = &quot;weeks&quot;)
+difftime(now(), ymd_hms(19610526100125), units = &quot;secs&quot;)</code></pre>
+<pre><code>## Time difference of 1898607605 secs</code></pre>
+<pre class="r"><code>dif_claudio_monica = difftime(ymd(20211013), ymd(20210526), units = &quot;weeks&quot;)
 
 dif_tiempo &lt;- make_difftime(3600, units = &quot;minute&quot;) #difftime lo hace en segundos y después lo convierte a minutos
 dif_tiempo</code></pre>
@@ -1851,12 +1992,12 @@ dif_tiempo</code></pre>
 <pre class="r"><code>edad_m = today() - ymd(19610526) #difftime
 edad_m_s = ymd_hms(&quot;20210721 152000 UTC&quot;) - ymd_hms(&quot;19610526 120000 UTC&quot;)
 edad_m</code></pre>
-<pre><code>## Time difference of 21971 days</code></pre>
+<pre><code>## Time difference of 21974 days</code></pre>
 <pre class="r"><code>edad_m_s #la diferencia de tiempo la definió igual en dias, con decimales por la hora</code></pre>
 <pre><code>## Time difference of 21971.14 days</code></pre>
 <pre class="r"><code>edad_monica &lt;- as.duration(edad_m)
 edad_monica</code></pre>
-<pre><code>## [1] &quot;1898294400s (~60.15 years)&quot;</code></pre>
+<pre><code>## [1] &quot;1898553600s (~60.16 years)&quot;</code></pre>
 <pre class="r"><code>minuto &lt;- dseconds(60)
 año &lt;- dyears(1)
 dif_con_claudio &lt;- dweeks(20)
@@ -1869,7 +2010,7 @@ dif_con_claudio</code></pre>
 una_pm &lt;- as_datetime(&quot;2016-01-01 13:00:00 EST&quot;)
 periodo_1 &lt;- as.period(edad_m)
 periodo_1 + days(3)</code></pre>
-<pre><code>## [1] &quot;21974d 0H 0M 0S&quot;</code></pre>
+<pre><code>## [1] &quot;21977d 0H 0M 0S&quot;</code></pre>
 <pre class="r"><code>leap &lt;- interval(ymd(&quot;20160101&quot;), ymd(&quot;20170101&quot;))
 leap_in_days &lt;- as.period(leap, unit = &quot;days&quot;)   #366 dias
 leap_in_years &lt;- as.period(leap, unit = &quot;years&quot;) #1 año  
@@ -1962,11 +2103,52 @@ siguiente_anio &lt;- today() + years(1)
 </div>
 <div id="zonas-horarias" class="section level2">
 <h2>Zonas Horarias</h2>
+<p>Por que son importantes las zonas horarias:</p>
+<ol style="list-style-type: decimal">
+<li>Especificando las zonas horarias te permite ajustar automáticamente la epoca de salvado de energía daylight saving time (DST) al hacer operaciones time differences (para la misma locación).</li>
+</ol>
+<pre class="r"><code># Note: automatically adjusts for daylight saving time (DST):
+
+t1 &lt;- &quot;2020-03-29 00:00:00&quot;  # before switch to DST
+t2 &lt;- &quot;2020-03-29 03:00:00&quot;  # after switch to DST
+
+# UTC (without time shift):
+as.POSIXct(t2, tz = &quot;UTC&quot;) - as.POSIXct(t1, tz = &quot;UTC&quot;)</code></pre>
+<pre><code>## Time difference of 3 hours</code></pre>
+<pre class="r"><code>#&gt; Time difference of 3 hours
+
+# Germany (with daylight saving time, DST):
+as.POSIXct(t2, tz = &quot;Europe/Berlin&quot;) - as.POSIXct(t1, tz = &quot;Europe/Berlin&quot;)</code></pre>
+<pre><code>## Time difference of 2 hours</code></pre>
+<pre class="r"><code>#&gt; Time difference of 2 hours</code></pre>
+<ol start="2" style="list-style-type: decimal">
+<li>Especificando time zones permite calcular diferencia de tiempo entre horas en diferentes locaciones:</li>
+</ol>
+<pre class="r"><code># Shifting Xmas eve across locations:
+txmas &lt;- &quot;2020-12-24 20:00:00&quot;
+
+as.POSIXct(txmas, tz = &quot;UTC&quot;) - as.POSIXct(txmas, tz = &quot;Australia/Sydney&quot;) </code></pre>
+<pre><code>## Time difference of 11 hours</code></pre>
+<pre class="r"><code>#&gt; Time difference of 11 hours
+as.POSIXct(txmas, tz = &quot;UTC&quot;) - as.POSIXct(txmas, tz = &quot;Europe/Berlin&quot;) </code></pre>
+<pre><code>## Time difference of 1 hours</code></pre>
+<pre class="r"><code>#&gt; Time difference of 1 hours
+as.POSIXct(txmas, tz = &quot;UTC&quot;) - as.POSIXct(txmas, tz = &quot;US/Pacific&quot;)</code></pre>
+<pre><code>## Time difference of -8 hours</code></pre>
+<pre class="r"><code>#&gt; Time difference of -8 hours</code></pre>
 <p>R reconoce aprox. 600 zonas horarias. Cada una incluye la zona horaria, horario de verano y variaciones históricas del calendario para un área. R asigna una zona horaria por vector. <strong>Usa la zona horaria UTC</strong> para evitar el Horario de Verano</p>
 <p>El primer desafío es que los nombres comunes de los husos horarios tienden a ser ambiguos. Por ejemplo, si eres estadounidense, probablemente te sea familiar la sigla EST, (del inglés de Tiempo Este Estándar). Pero también existe en Canadá y Australia. Se usa entonces <continente>/<ciudad> Ejemplo: America/New_York</p>
 <p>Como saber el uso horario de tu sistema:</p>
 <pre class="r"><code>Sys.timezone()</code></pre>
 <pre><code>## [1] &quot;America/Buenos_Aires&quot;</code></pre>
+<pre class="r"><code>as.POSIXct(&quot;2020-12-24 23:59:59&quot;, tz = &quot;GMT&quot;)</code></pre>
+<pre><code>## [1] &quot;2020-12-24 23:59:59 GMT&quot;</code></pre>
+<pre class="r"><code>as.POSIXct(&quot;2020-12-24 23:59:59&quot;, tz = &quot;Europe/London&quot;)</code></pre>
+<pre><code>## [1] &quot;2020-12-24 23:59:59 GMT&quot;</code></pre>
+<pre class="r"><code>as.POSIXct(&quot;2020-12-24 23:59:59&quot;, tz = &quot;Europe/Moscow&quot;)</code></pre>
+<pre><code>## [1] &quot;2020-12-24 23:59:59 MSK&quot;</code></pre>
+<pre class="r"><code>as.POSIXct(&quot;2020-12-24 23:59:59&quot;, tz = &quot;Europe/Berlin&quot;)</code></pre>
+<pre><code>## [1] &quot;2020-12-24 23:59:59 CET&quot;</code></pre>
 <p>En R, el huso horario es un atributo de la fecha-hora (date-time)</p>
 <pre class="r"><code>x1 &lt;- ymd_hms(&quot;2015-06-01 12:00:00&quot;, tz = &quot;America/New_York&quot;)
 x2 &lt;- ymd_hms(&quot;2015-06-01 18:00:00&quot;, tz = &quot;Europe/Copenhagen&quot;)
@@ -2311,6 +2493,12 @@ parse_date_time() funciones de análisis de fecha y hora fáciles de usar. parse
 <div id="para-saber-las-distintas-zonas-horarias." class="section level2">
 <h2>Para saber las distintas zonas horarias.</h2>
 <p>[Abrev Zonas horarias] <a href="https://www.ibm.com/docs/es/z-workload-scheduler/8.6.0?topic=SSRULV_8.6.0/com.ibm.tivoli.itws.doc_8.6/awsrgcompletetzt.htm" class="uri">https://www.ibm.com/docs/es/z-workload-scheduler/8.6.0?topic=SSRULV_8.6.0/com.ibm.tivoli.itws.doc_8.6/awsrgcompletetzt.htm</a></p>
+</div>
+<div id="documentacion-para-leer" class="section level2">
+<h2>Documentacion para leer:</h2>
+<p>En consola:<br />
+?DateTimeClasses<br />
+?Dates</p>
 </div>
 </div>
 

@@ -1,7 +1,9 @@
 ---
 title: "Lubridate_vignette"
-output: html_notebook
-editor_options: 
+output:
+  html_document:
+    df_print: paged
+editor_options:
   chunk_output_type: inline
 ---
 ```{r setup, include=FALSE}
@@ -89,7 +91,7 @@ round_date(x, "year")
 ```
  
 ## Intervalos:
-Interval es un difftime (un lapso) con una fecha exacta de inicio.(a diferencia de duration). Lo cual nos permite operar con fechas exactas, sin molestar los bisiestos.
+Interval es un espacio de tiempo con una fecha exacta de inicio y de fin.(a diferencia de duration). Lo cual nos permite operar con fechas exactas, sin molestar los bisiestos.
 
 Se puede guardar un intervalo de tiempo como un objeto de clase Interval. Va a tener un inicio, cantidad de segundos hasta el final del intervalo y un time-zone. El intervalo puede ser positivo (start<end) o negativo (si end<start)
 Por ejemplo, si estuve en Auckland del 4-6-11 al 10-8-11, se puede crear un intervalo de 2 formas posibles:
