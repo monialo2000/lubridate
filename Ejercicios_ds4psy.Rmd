@@ -1,0 +1,514 @@
+---
+title: "Ejercicios Lubridate ds4psy"
+output:
+  html_document:
+    df_print: paged
+editor_options:
+  chunk_output_type: inline
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(lubridate)
+library(hms)
+```
+
+1.Predicting dates in R:
+Predict, evaluate, and explain the result of the following commands.
+
+Which format corresponds to the conventions used in the US, EU, and R, respectively?
+
+Hint: Note the details of the different format arguments.
+
+```{r}
+as.Date("10 11 12", format = "%m %d %y") #11-10-2012
+as.Date("10/11/12", format = "%y/%d/%m") #11-12-2010
+as.Date("10:11:12", format = "%d:%m:%y") #10-11-2012
+as.Date("10-11-12", format = "%y-%m-%d") #12-11-2010
+as.Date("10/11/12", format = "%y %m %d") #NA pero con format = "%y/%m/%d") #2010-11-12
+```
+
+2. Reading dates into R:
+Read the following dates (provided in different formats) into R (by using the as.Date function with an appropriate format):
+
+```{r}
+as.Date("2020-07-01", format = "%Y-%m-%d")
+as.Date("1/7/2020", format = "%d/%m/%Y" )
+as.Date("July 1st, 2020", format = "%B %dst, %Y", locale = locale("en"))
+as.Date("2nd January, 03", format = "%dnd %B, %y", locale = default_locale())
+as.Date("Feb. 29, 2020", format = "%b %d, %Y", locale = locale("es"))
+
+#Según explicación de as.Date, pero no funca igual
+#lct <- Sys.getlocale("LC_TIME"); Sys.setlocale("LC_TIME", "C")
+#Sys.setlocale("LC_TIME", lct)
+#mx <- c("1jan1960", "2jan1960", "31mar1960", "30jul1960")
+#mz <- as.Date(mx, "%d%b%Y")
+#mz
+
+```
+
+
+3. The date detective:
+In an online survey, a person notes that his or her birthday is on “02-29-10.”
+
+Assuming that there is no error, which date does the string “02-29-10” denote?
+Hint: This puzzle can be solved without R, but R can help settling some issues.
+
+```{r}
+d3 <- "02-29-10"
+
+#los valores posibles son: 
+  # 29 de febrero de 2010  o 1910 pero ni 2010 ni 1919 fueron bisiestos
+  # 02 de octubre de 1929 parece demasiado antiguo...
+  # 29 de octubre de 2002 
+#as.Date(d3)
+as.Date(d3, format = "%m-%d-%y") #da NA
+leap_year(2010) # si 2010 no fue bisiesto no podría ser
+leap_year(1910)
+
+as.Date(d3, format = "%y-%d-%m")
+```
+4.Name ranges of weekdays and months:
+We have seen how to retrieve the name of the weekday or month for a particular date.
+
+Can you also construct an R expression that prints all possible names of weekdays and months?
+
+```{r all_weekdays_&_months_expresion}
+explicate_date <- "La fecha %Y-%m-%d fue un día %A en el mes de %B,  de %Y."
+
+monica <- as.Date("1961-05-26", format = "%Y-%m-%d")
+format(monica, format = explicate_date)
+
+# generamos los 7 dias de la semana y los 12 meses del año
+dia <- rep(1:7, 12)
+mes <- rep(1:12, 7)
+year <- 2010
+
+fecha <- make_date(day = dia,  month = mes, year = year)
+
+fechas <- data.frame(dia, mes, year)
+
+fechas_con_desc <- fechas %>% 
+  arrange(mes, dia) %>% 
+  mutate(fecha = make_date(day = dia,  month = mes, year = year),
+         descrip = format(fecha, format = explicate_date))
+```
+
+5. Personal life times:
+Enter the date of birth and death (or current date) of some person (e.g., a celebrity or yourself) and compute their age in various units of time (years, months, weeks, days, hours, minutes, seconds).
+
+Hint: As the difftime() function does not allow for units beyond “weeks,” use heuristics and arithmetic for comuting larger units (months, years). (We will discuss more precise methods for dealing with such situations in Section 10.3.)
+
+```{r}
+monica_nac <- ymd("19610526")
+hoy <- today()
+
+vida_monica <- monica_nac %--% hoy
+
+semanas <- difftime(hoy, monica_nac, units = "weeks")
+dias <- difftime(hoy, monica_nac, units = "days")
+dias_int <- as.integer(dias)
+años <- dias_int / 365
+meses <- dias_int / 30
+
+```
+
+6. Leap year scheduling:
+As 2020 was a leap year (see Wikipedia), there was a February 29, 2020. Imagine a child was born on this date.
+
+```{r leap 10 years}
+nacio <- ymd(20200229)
+prox_10_bisiestos <- seq.Date(nacio,  length = 12, by = "4 years")
+```
+
+A.10.2.
+1. Use base R commands (with appropriate “POSIX” specifications) or the corresponding lubridate functions to parse the data of birth dob and time of birth tob as two new columns of dt_10.
+
+2.As it turns out, all the people of dt_10 were born in Denmark. Create a second tibble dt_10_2 that considers this fact for the tob variable (e.g., when using the make_datetime() function) and quantify and explain any discrepancies between dt_10$tob and the corresponding variable in dt_10_2.
+```{r}
+dt_10 <- readr::read_csv("http://rpository.com/ds4psy/data/dt_10.csv")
+#1.
+
+#a R base 
+dt_10 <- dt_10 %>%
+  mutate(dob = as.Date(paste(year, month, day, sep = "-"), format = "%Y-%m-%d"), 
+         tob = as.POSIXct(paste0(year, "-", month, "-", day, " ", hour, ":", min, ":", sec), 
+                          format = "%Y-%m-%d %H:%M:%S", tz = "UTC")
+                             # using standard time zone
+  )
+
+#b Lubridate
+dt_11 <- dt_10 %>%
+  mutate(dob = make_date(year, month, day),
+         tob = make_datetime(year, month, day, hour, min, sec, 
+                             tz = "UTC")  # using standard time zone
+  )
+
+
+#2.
+
+dt_10_2 <- dt_10 %>% 
+  mutate(tob_2 = make_datetime(year, month, day, hour, min, sec, tz = "Europe/Copenhagen"))
+
+dt_10$tob - dt_10_2$tob_2
+
+#3.
+# Use the appropriate lubridate functions to add 2 columns that specify – given each person’s DOB – the weekday dob_wd (from Monday to Sunday) of their birthday and their current age age_fy in full years (i.e., the numeric value of their age, as an integer).
+
+today <-  today()
+dt_10 <- dt_10 %>%
+  mutate(dob = make_date(year, month, day),
+         tob = make_datetime(year, month, day, hour, min, sec,
+                             tz = "Europe/Copenhagen")) %>%
+  select(name, dob, tob)
+
+today - dt_10$dob  # age (in days)
+
+lubridate::as.duration(today - dt_10$dob)
+interval(dt_10$dob, today) / duration(num = 1, units = "years")
+interval(dt_10$dob, today) / dyears(1)
+
+dt_10 <- dt_10 %>%
+  select(-tob) %>% 
+  mutate(dob_wd = wday(dob, label = TRUE, week_start = 1, abbr = FALSE),
+         age_yr = interval(dob, today) / duration(num = 1, units = "years"),
+         age_fy = floor(age_yr))   #floor para quedarme con nro. más bajo, sin dec.
+
+```
+
+A.10.3 Exercise 3
+```{r}
+fame <- tibble(name = c("Napoleon Bonaparte", "Jimi Hendrix", "Michael Jackson", "Frida Kahlo", 
+                        "Angela Merkel", "Kobe Bryant", "Lionel Messi", "Zinedine Zidane"),
+               area = c("politics", "guitarist/music", "singer/music", "arts/painter", 
+                        "politics", "basketball/sports", "football/sports", "football/sports"), 
+               DOB = c("August 15, 1769", "November 27, 1942", "August 29, 1958", "July 06, 1907", 
+                       "July 17, 1954", "August 23, 1978", "June 24, 1987", "June 23, 1972"),
+               DOD = c("May 05, 1821", "September 18, 1970", "June 25, 2009", "July 13, 1954", 
+                       NA, "January 26, 2020", NA, NA))
+
+#2. Use the appropriate lubridate functions to replace the DOB and DOD variables in fame by corresponding dob and dod variables of type “Date.”
+fame <- fame %>%
+  mutate(dob = mdy(DOB),
+         dod = mdy(DOD)) %>% 
+  select(name, area, dob, dod)
+
+#3. Add two variables to fame that specify the weekday (from “Monday” to “Sunday”) of their birth (dob_wd) and — if applicable — of their death (dob_wd).
+
+fame <- fame %>% 
+  mutate(dob_wd = wday(dob, label = TRUE, week_start = 1, abbr = FALSE),
+         dod_wd = wday(dod, label = TRUE, week_start = 1, abbr = FALSE))
+
+#4. Add a variable age_days that computes their age in days (relative to today’s date). Then compute two more variables age_yr1 and age_yr2 that determines their age in years (as a decimal number) in two different ways. Finally, add a variable age_fy that specifies their current age (in full years) as an integer (i.e., what they would say if they truthfully responded to the question “How old are you today?”).
+
+fame <-  fame %>% 
+  mutate(# 1. time difference (in days/days-in-average-year):  
+         age_days = (today - dob),
+         age_yr1 = as.numeric(age_days)/365.25,
+         # 2. interval (in duration of years):
+         # age_yr2 = interval(dob, today) / duration(num = 1, units = "years"),
+         age_yr2 = interval(dob, today) / dyears(1),         
+         # 3. interval (in period of years): 
+         # age_yr3 = interval(dob, today) / period(num = 1, units = "years"),
+         age_yr3 = interval(dob, today) / years(1),
+         # Round down year values:
+         age_fy1 = floor(age_yr1),          
+         age_fy2 = floor(age_yr2),
+         age_fy3 = floor(age_yr3),
+         # 4. interval and periods with integer division:
+         age_fy4 = interval(dob, today) %/% years(1),  
+         # 5. If dead people do no longer age: 
+         age_fy5 = ifelse(is.na(dod), age_fy4, interval(dob, dod) %/% years(1))
+         ) %>% 
+   select(-area, -age_days, -age_yr1, -age_yr2, -age_yr3)
+
+#5. Correct your previous age_fyr variable so that — for those people who have already died — it should remain at the age at which they died (i.e., dead people do not age further).
+
+fame %>%
+  filter(!is.na(dod)) %>%
+  mutate(age_days = (dod - dob),
+         age_yr1 = as.numeric(age_days)/365, 
+         age_yr2 = interval(dob, dod) / duration(num = 1, units = "years"),
+         age_fyr = floor(age_yr2)
+         ) 
+```
+
+A.10.4 Exercise 4
+Time conversions
+1.Define a time point of the New Year fireworks in Sydney, Australia, as “2021-01-01 00:00:01” (including time zone information).
+
+```{r}
+# Time of Sydney NY fireworks:
+(t_fw <- ymd_hms("2021-01-01 00:00:01", tz = "Australia/Sydney"))
+#> [1] "2021-01-01 00:00:01 AEDT"
+
+#2.Predict and explain the results of the following commands in your own words.
+with_tz(t_fw,  tz = "Europe/Berlin")
+#> [1] "2020-12-31 14:00:01 CET"
+force_tz(t_fw, tz = "Europe/Berlin")
+
+#3. Predict and explain the outcome of the following commands.
+
+t_fw -  with_tz(t_fw, tz = "Europe/Berlin")
+t_fw - force_tz(t_fw, tz = "Europe/Berlin")
+
+# As with_tz() does not change the actual time represented (only its display), the time difference must be zero.
+# 
+# As force_tz() changes the time (but not the time dislayed) and we have seen in 2. that the time in Sydney is 10 hours ahead of Berlin, the time difference must be  
+# −
+# 10   hours.
+```
+## A.10.5 Exercise 5
+Hoop times
+1. This exercise uses the lakers dataset included in lubridate (originally from http://www.basketballgeek.com/data/), which contains play-by-play statistics of each Los Angeles Lakers (LAL) basketball game in the 2008/2009 season of the NBA. (See ?lakers for details.)
+
+Select only those games against the Dallas Mavericks (abbreviated as “DAL”) and save the corresponding data as a tibble LAL_DAL.
+
+```{r}
+
+LAL_DAL <- as_tibble(lubridate::lakers) %>% 
+  filter(opponent == "DAL")
+```
+
+2. Use your tidyverse knowledge acquired so far to answer some basic questions about those games:
+
+How many such (home vs. away) games exist?
+On which dates were they played?
+What were their scores? Who won the game?
+
+```{r}
+as_tibble(LAL_DAL) %>% 
+  filter(team != "OFF") %>%
+  group_by(date, game_type, team) %>% 
+  summarise(point_sum = sum(points)) %>%
+  pivot_wider(names_from = team, values_from =  point_sum) #spread(key = team, val = point_sum)
+```
+
+3.Create and add the following date and time variables to LAL_DAL:
+
+date should be a variable of type “Date” (rather than a character string)
+t_clock should represent the time shown on the clock (as a period)
+t_psec should represent the time elapsed in the current period (a duration in seconds)
+t_game should represent the time elapsed in the game overall (as a duration).
+
+```{r}
+t_period <- dminutes(12)
+
+lada_1 <- LAL_DAL %>%
+  select(-opponent, -game_type, -x, -y, -player, -result) %>% 
+  mutate(date = ymd(date),  # convert integer into date
+         t_clock = ms(LAL_DAL$time),
+         t_psec = t_period - as.duration(t_clock),
+         t_game = t_period * (period - 1) + t_psec
+         )
+
+tail(lada_1)
+```
+
+4. Prominent players:
+
+For which individual player on each team do the data record the highest number of events?
+How many points did each of these two players score (over all games)?
+What would it take to compute the time difference between all recorded events for these two players as lubridate intervals?
+Bonus task: Compute these intervals for each of these two players.
+
+```{r}
+
+LAL_DAL %>% 
+  group_by(team, player) %>% 
+  summarise(n_events = n(), 
+            point_sum = sum(points)) %>%
+  arrange(desc(n_events)) %>%
+  head(2)
+```
+
+- What would it take to compute the time difference between all recorded events for these two players as **lubridate** intervals?  
+
+Answer:
+
+All measures of time in the data so far are provided in terms of clock-time. Thus, they only denote the relative time elapsed within each game (i.e., ranging from 0 to a maximum of 48 minutes).
+
+As lubridate intervals are anchored in actual calendar time, computing them would require looking up the starting time of each game (in the correct time zone) and adding t_game to it. This would yield a new date-time (or “POSIXct”) variable denoting actual calendar time. We could then use the lubridate function int_diff() on this variable to compute the time spans between events as intervals.
+
+Cumulative points per game:
+
+Compute and add a variable for the cumulative point_total of each game and team.
+Compute the final score f_score of each game and team (and compare your result to the one obtained to answer 2. above).
+Plot the (cumulative) point_total for each game per team as a function of t_game.
+
+```{r}
+lada_2 <- lada_1 %>%
+  filter(team != "OFF") %>% 
+  group_by(date, team) %>%
+  mutate(point_total = cumsum(points))
+# lada_2
+
+# Compute and check final scores: 
+lada_2 %>% 
+  group_by(as.character(date), team) %>%
+  summarise(f_score = max(point_total)
+  ) %>%
+  spread(key = team, value = f_score)
+#> # A tibble: 3 x 3
+#> # Groups:   as.character(date) [3]
+#>   `as.character(date)`   DAL   LAL
+#>   <chr>                <int> <int>
+#> 1 2008-11-11              99   106
+#> 2 2008-11-28             107   114
+#> 3 2009-03-15             100   107
+
+# Plot point_total as a function of t_game for each game and team: 
+ggplot(lada_2, aes(x = t_game, y = point_total, group = team)) +
+  geom_line(aes(col = team), size = 1, alpha = .8) + 
+  facet_wrap(~date) +
+  labs(title = "Cumulative points in NBA games between LAL and DAL (season 2008/2009)", 
+       color = "Team:", x = "Time (sec)", y = "Cumulative points", 
+       caption = "Based on lubridate's `lakers` data.") + 
+  theme_bw()
+```
+
+
+## A.10.6 Exercise 6
+DOB and study times
+The dataset exp_num_dt (available in the ds4psy package or as a CSV-file from rpository.com) contains the birth dates and study participation times of 1000 ficticious, but surprisingly friendly people.
+
+We read the data file into a tibble dt and select only its date-related variables:
+```{r}
+dt <- readr::read_csv("http://rpository.com/ds4psy/data/dt.csv")
+dt_t <- dt %>% select(name:byear, t_1, t_2)
+```
+
+```{r}
+# (a) base R solution:
+dt_1 <- dt_t  # copy file
+DOB_strings <- paste(dt_1$byear, dt_1$bmonth, dt_1$bday, sep = "-")  # paste DOB string
+dt_1$DOB <- as.Date(DOB_strings, format = "%Y-%m-%d")                # parse DOB
+dt_1$bweekday <- format(dt_1$DOB, "%a")                              # retrieve weekday
+dt_1
+
+# (b) lubridate solution:
+dt_2 <- dt_t %>% 
+  mutate(DOB = lubridate::make_date(day = bday, month = bmonth, year = byear),
+         bweekday = lubridate::wday(DOB, label = TRUE, abbr = TRUE)) %>% 
+  select(name:byear, DOB, bweekday, everything()) %>%
+  mutate(bweekday = as.character(bweekday))
+dt_2 
+```
+
+
+Note: We could also parse DOB as calendar times/date-times (using the as.POSIXct() and make_datetime() functions). However, to obtain identical results in base R and lubridate, we need to specify the same time zone in both solutions (e.g., by setting tz = "").
+
+What would each participant respond to the question
+
+“How old are you?”
+(i.e., what was each person’s age in completed years, when starting the study in January 2020)? Verify your result for those participants who took part in the study on their birthday.
+
+Hint: This task requires considering both DOB and t_1 (to check whether the person already celebrated his or her birthday in the current year when starting the study at the time t_1).
+
+```{r}
+dt_2 <- dt_t %>% 
+  mutate(DOB = lubridate::make_date(day = bday, month = bmonth, year = byear),
+         study_date = as.Date(t_1),         # time as date
+         year_diff = lubridate::year(t_1) - lubridate::year(DOB),  # difference (in date years)
+         life_time = DOB %--% study_date,   # a time interval (between dates)         
+         life_time_2 = DOB %--% t_1,        # a time interval (between times)
+         age = life_time_2 %/% years(1)) %>%  # completed years
+  select(name, DOB, t_1, age, year_diff)
+dt_2
+
+dt_2 %>% filter(lubridate::month(DOB) == 1)
+
+dt_2 %>% 
+  filter(lubridate::month(DOB) == lubridate::month(t_1)) %>%
+  filter(lubridate::day(DOB) == lubridate::day(t_1))
+```
+3. The time variables t_1 and t_2 indicate the start and end times of each person’s participation in this study.
+
+Compute the duration of each person’s participation (in minutes and seconds) and plot the distribution of the resulting durations (e.g., as a histogram).
+```{r}
+dt_3 <- dt %>%
+  mutate(t_diff = (t_2 - t_1), 
+         dur = as.duration(t_2 - t_1))
+# dt_3
+
+# Get means:
+dur_mn <- mean(dt_3$dur)    # mean
+dur_md <- median(dt_3$dur)  # median
+
+# Plot histograms:
+
+## base R:
+# hist(as.numeric(dt$dur), breaks = 20, col = unikn::Seeblau)  
+
+# ggplot: 
+ggplot(dt_3, aes(x = as.numeric(dur))) +
+  geom_histogram(col = "black", binwidth = 200, fill = "blue") +
+  geom_vline(xintercept = dur_mn, col = "gold", linetype = 1, size = 1) +
+  geom_vline(xintercept = dur_md, col = "red", linetype = 2, size = 1) +
+  labs(title = "Distribution of durations", x = "Duration (in seconds)")
+```
+4. The study officially only ran for 5 days — from “2020-01-13” to “2020-01-18” — and should only include participants that responded in up to one hour (60 minutes).
+
+Add a filter variable valid that enforces these criteria (i.e., allows filtering out participants with other dates and durations longer than 60 minutes).
+
+```{r}
+dt_4 <- dt_3 %>%
+  mutate(date = as_date(t_1),
+         valid_date = (date >= "2020-01-13") & (date <= "2020-01-18"),
+         valid_dur  = (dur <= as.duration(60 * 60)),
+         valid      = valid_date & valid_dur) %>%
+  filter(valid)
+
+# Filtered data: 
+dt_4
+
+min(dt_4$t_1)
+#> [1] "2020-01-13 08:09:30 UTC"
+max(dt_4$t_1)
+#> [1] "2020-01-18 17:50:53 UTC"
+max(dt_4$dur)
+```
+
+5. Finally, we can compute some basic descriptives of the participants considered to be valid:
+
+How many participants remain in the sample of valid data?
+What is their average height and g_iq score?
+
+```{r}
+# Get descriptives (by hand):
+nrow(dt_4)  # N of valid participants
+#> [1] 519
+mean(dt_4$height)
+#> [1] 166.2852
+#mean(dt_4$g_iq, na.rm = TRUE)  # There are NA values!
+#> [1] 101.5207
+#sum(!is.na(dt_4$g_iq))         # N of non-NA values?
+#> [1] 507
+
+# All in one dplyr pipe:
+dt_4 %>% 
+  summarise(N = n(),
+            mn_height = mean(height),
+            N_hg_nonNA = sum(!is.na(height)))
+            #mn_iq = mean(g_iq, na.rm = TRUE))
+           # N_iq_nonNA = sum(!is.na(g_iq)))
+#> # A tibble: 1 x 5
+#>       N mn_height N_hg_nonNA mn_iq N_iq_nonNA
+#>   <int>     <dbl>      <int> <dbl>      <int>
+#> 1   519      166.        519  102.        507
+```
+
+## A.10.7 Exercise 7
+Bonus task: Evaluating time differences
+This exercise creates random time differences and compares the results of computing them in two different ways.
+
+Compute and compare the time difference between both vectors for various units of time. Specifically, compare the solutions of the diff_times() function of ds4psy with the corresponding lubridate solution (using time intervals and periods).
+
+```{r}
+t1 <- c("2020-04-14 10:00:00", "2020-05-11 12:00:00", "2020-03-15 15:00:00")
+t2 <- c("2020-02-25 05:00:00", "2020-02-15 10:00:00", "2020-01-28 16:00:00")
+
+as.period(lubridate::interval(t1, t2), unit = "months")
+as.duration(lubridate::interval(t1, t2)) / dmonths(1)
+```
+
